@@ -479,6 +479,7 @@
 (setq helm-completion-in-region-fuzzy-match t)
 (global-set-key (kbd "M-X")  'helm-M-x)
 (global-set-key (kbd "C-x C-d")  'helm-for-files)
+(global-set-key (kbd "C-o")  'helm-occur)
 
 ;; show kill ring history
 (global-set-key (kbd "M-y") 'helm-show-kill-ring)
