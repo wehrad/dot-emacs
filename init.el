@@ -283,6 +283,8 @@
   (org-mode . citar-capf-setup))
 (eval-after-load 'latex '(define-key LaTeX-mode-map (kbd "C-c C-p")  #'citar-insert-citation))
 
+;; enable automatic parsing of tex files
+(setq TeX-parse-self t)
 
 ;; -------------------------------------------- useful global settings
 
