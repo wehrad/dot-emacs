@@ -218,6 +218,10 @@
       org-alert-notify-after-event-cutoff 10)
 (org-alert-enable)
 
+;; enable auto fill in org files
+(add-hook 'org-mode-hook #'auto-fill-mode)
+(setq-default fill-column 70)
+
 ;; -------------------------------------------- yaml
 
 (require 'yaml-mode) 
