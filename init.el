@@ -403,8 +403,11 @@
 ;; let spaceline take car of matches
 (setq anzu-cons-mode-line-p nil)
 
-;; activate csv-mode for csv files
+;; activate csv-mode for csv and txt files
 (add-to-list 'auto-mode-alist '("\\.csv\\'" . csv-mode))
+(add-to-list 'auto-mode-alist '("\\.txt\\'" . csv-mode))
+;; add some other common separators
+(setq csv-separators '(";" "," "\t"))
 
 ;; facilite move to beginning/end of buffer
 (global-set-key (kbd "C-,") 'beginning-of-buffer)
