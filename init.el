@@ -597,6 +597,14 @@
 (add-to-list 'load-path "~/.emacs.d/custom-modes/emacs-moose-mode")
 (require 'moose-mode)
 
+;; -------------------------------------------- C++
+
+;; override to keep global keybindings
+(with-eval-after-load 'cc-mode
+  (define-key c++-mode-map (kbd "C-d") 'my/move-up-10-lines))
+(with-eval-after-load 'cc-mode
+  (define-key c++-mode-map (kbd "C-f") 'my/move-down-10-lines))
+
 ;; -------------------------------------------- modify buffers
 
 ;; Originally from stevey, adapted to support moving to a new directory.
