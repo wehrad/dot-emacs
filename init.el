@@ -143,60 +143,51 @@
 
 ;; -------------------------------------------- tex
 
-(require 'tex-site)
-;; flychecks needs ispell, aspell, hunspell
-(add-hook 'LaTeX-mode-hook '(lambda () 
-			      (reftex-mode) 
-			      (flyspell-mode)))
-(setq reftex-plug-into-AUCTeX t)
-;; (setq reftex-load-hook (quote (imenu-add-menubar-index)))
-;; (setq reftex-mode-hook (quote (imenu-add-menubar-index)))
-(setq TeX-view-program-list (quote ("Okular" ("output-pdf" "okular"))))
+(use-package tex-site
+  :ensure auctex
+  :defer t
+  :hook
+  (LaTeX-mode . reftex-mode)
+  (LaTeX-mode . flyspell-mode)
+  (LaTeX-mode . turn-on-cdlatex)
+  (LaTeX-mode . auto-fill-mode)
+  (flyspell-mode . flyspell-buffer)
+  :config
+  (setq reftex-plug-into-AUCTeX t)
+  (setq fill-column 70)
+  (setq ring-bell-function 'ignore)
 
+  ;; Setup TeX view programs
+  (setq TeX-view-program-list
+        '(("Okular" ("output-pdf" "okular"))
+          ("okular" ("okular" (mode-io-correlate " -p %(outpage)") "%o"))))
+  (setq TeX-view-program-selection
+        '(((output-dvi style-pstricks) "dvips and gv")
+          (output-dvi "xdvi")
+          (output-pdf "okular")
+          (output-html "xdg-open")))
 
-;; ;; cdlatex
-(autoload 'cdlatex-mode "cdlatex" "CDLaTeX Mode" t)
-(autoload 'turn-on-cdlatex "cdlatex" "CDLaTeX Mode" t)
-(add-hook 'LaTeX-mode-hook 'turn-on-cdlatex) ; with AUCTeX LaTeX mode
+  ;; Keybindings for LaTeX mode
+  (eval-after-load 'latex
+    '(progn
+       (define-key LaTeX-mode-map (kbd "C-c c") #'flyspell-correct-word-before-point)
+       (define-key LaTeX-mode-map (kbd "C-c t") #'get-synonyms)
+       (define-key LaTeX-mode-map (kbd "C-c C-p") #'citar-insert-citation)))
 
-;; break line after 80 characters
-(add-hook 'LaTeX-mode-hook #'auto-fill-mode)
-(setq-default fill-column 70)
+  ;; Enable TeX parsing
+  (setq TeX-parse-self t))
 
-(add-hook 'LaTeX-mode-hook #'turn-on-flyspell)
+;; Cdlatex autoloads
+(use-package cdlatex
+  :defer t)
 
-;;(setq TeX-source-correlate-mode t)
-(setq TeX-view-program-list (quote (("okular" ("okular" (mode-io-correlate " -p %(outpage)") "
-%o")))))
-(setq TeX-view-program-selection (quote (((output-dvi style-pstricks) "dvips and gv") 
-					 (output-dvi "xdvi") 
-					 (output-pdf "okular") 
-					 (output-html "xdg-open"))))
-
-(setq ring-bell-function 'ignore)
-
-(add-hook 'flyspell-mode-hook #'flyspell-buffer)
-
-;; correct word
-(eval-after-load 'latex '(define-key LaTeX-mode-map (kbd "C-c c")
-			   #'flyspell-correct-word-before-point))
-
-;; get synonyms from Thesaurus.com (get-synonyms)
-(add-to-list 'load-path "~/.emacs.d/custom-modes/thesaurus.el")
-(require 'thesaurus)
-(eval-after-load 'latex '(define-key LaTeX-mode-map (kbd "C-c t")  #'get-synonyms))
-
-;; complete citations by scanning bibtex file
+;; citar setup for citations
 (use-package citar
+  :ensure t
   :custom
   (citar-bibliography '("~/bib/references.bib"))
-  :hook
-  (LaTeX-mode . citar-capf-setup)
-  (org-mode . citar-capf-setup))
-(eval-after-load 'latex '(define-key LaTeX-mode-map (kbd "C-c C-p")  #'citar-insert-citation))
-
-;; enable automatic parsing of tex files
-(setq TeX-parse-self t)
+  :hook ((LaTeX-mode . citar-capf-setup)
+         (org-mode . citar-capf-setup)))
 
 ;; -------------------------------------------- useful global settings
 
