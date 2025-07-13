@@ -416,86 +416,75 @@
 
 ;; -------------------------------------------- git
 
-;; make shell-command to pick up .bashrc aliases
-(setq shell-file-name "bash")
-(setq shell-command-switch "-ic")
+(use-package shell
+  :config
+  ;; Make shell-command pick up .bashrc aliases
+  (setq shell-file-name "bash")
+  (setq shell-command-switch "-ic")
 
-;; easy git add commit and push
-(defun push-all (comment) 
-  (interactive "Mcomment:") 
-  (save-some-buffers t)			; save all buffer
-  (shell-command (format "git add -A; git commit -a -m \" %s\"; git push &" comment)))
+  ;; Easy git add, commit, and push
+  (defun push-all (comment)
+    (interactive "Mcomment:")
+    (save-some-buffers t)  ;; save all buffers
+    (shell-command (format
+                    "git add -A; git commit -a -m \" %s\"; git push &"
+                    comment)))
 
-(global-set-key (kbd "C-c g") 'push-all)
+  (global-set-key (kbd "C-c g") #'push-all)
 
-;; easy git add commit and push
-(defun update-gitignore (comment)
-  (interactive "Mcomment:") 
-  (save-some-buffers t)			; save all buffer
-  (shell-command (format "git rm -r --cached .; git add -A; git commit -a -m \" %s\"; git push &" comment)))
+  ;; Easy git add, commit, push after updating .gitignore cache
+  (defun update-gitignore (comment)
+    (interactive "Mcomment:")
+    (save-some-buffers t)
+    (shell-command (format
+                    "git rm -r --cached .; git add -A; git commit -a -m \" %s\"; git push &"
+                    comment)))
 
-(global-set-key (kbd "C-c t") 'update-gitignore)
+  (global-set-key (kbd "C-c t") #'update-gitignore))
 
-;; Scrape own private and public Github repositories
-;; for existing code matching input
-;; consult-gh-search-my-code currently used instead
-(defun find-gh-code (code) 
-  (interactive "Mcode:") 
-  (shell-command (format "ghcode -ri %s" code)))
-
-;; (global-set-key (kbd "C-c f") 'find-gh-code)
-
-;; ;; a GitHub CLI client inside GNU Emacs using Consult
-;; ;; note: make sure gh CLI is setup (gh auth login)
 (use-package consult-gh
   :ensure t
-  :after consult)
-
-(with-eval-after-load 'consult-gh
-  ;; add your main GitHub account (replace "wehrad" with your user or org)
+  :after consult
+  :config
+  ;; Add main GitHub account (replace "wehrad" accordingly)
   (unless (boundp 'consult-gh-default-orgs-list)
     (defvar consult-gh-default-orgs-list nil))
   (unless (member "wehrad" consult-gh-default-orgs-list)
     (add-to-list 'consult-gh-default-orgs-list "wehrad"))
 
-  ;; use "gh org list" to get a list of all your organizations and add them to default list
+  ;; Add all GitHub organizations to the default list
   (setq consult-gh-default-orgs-list
         (append consult-gh-default-orgs-list
-                (remove "" (split-string (or (consult-gh--command-to-string "org" "list") "") "\n"))))
+                (remove "" (split-string
+                            (or (consult-gh--command-to-string "org" "list") "")
+                            "\n"))))
 
-  ;; set the default folder for cloning repositories, By default Consult-GH will confirm this before cloning
+  ;; Default clone directory
   (setq consult-gh-default-clone-directory "~/")
 
-  ;; show previews
+  ;; Enable previews and highlighting
   (setq consult-gh-show-preview t)
-
-  ;; highlight code matches
   (setq consult-gh-highlight-matches t)
 
-  ;; show previews on demand by hitting "M-o"
+  ;; Preview key and buffer mode
   (setq consult-gh-preview-key "M-o")
-
-  ;; show previews in org-mode
   (setq consult-gh-preview-buffer-mode 'org-mode)
 
-  ;; open files that contain code snippet in an emacs buffer
-  (setq consult-gh-code-action 'consult-gh--code-view-action)
+  ;; Code, file, and repo actions open in Emacs buffers
+  (setq consult-gh-code-action #'consult-gh--code-view-action)
+  (setq consult-gh-file-action #'consult-gh--files-view-action)
+  (setq consult-gh-repo-action #'consult-gh--repo-browse-files-action)
 
-  ;; open files in an emacs buffer
-  (setq consult-gh-file-action 'consult-gh--files-view-action)
-
-  ;; open file tree of repo on selection
-  (setq consult-gh-repo-action 'consult-gh--repo-browse-files-action)
-
-  ;; only search my own codebase
+  ;; Search only own codebase
   (defun consult-gh-search-my-code (&optional initial repo noaction)
-    "Search my own code"
+    "Search my own code only."
     (interactive)
-    (let ((consult-gh-search-code-args (append consult-gh-search-code-args
-                                              '("--owner=wehrad"))))
+    (let ((consult-gh-search-code-args
+           (append consult-gh-search-code-args
+                   '("--owner=wehrad"))))
       (consult-gh-search-code initial repo noaction)))
 
-  (global-set-key (kbd "C-c f") 'consult-gh-search-my-code))
+  (global-set-key (kbd "C-c f") #'consult-gh-search-my-code))
 
 ;; -------------------------------------------- MOOSE
 
@@ -563,145 +552,138 @@
 
 (global-set-key (kbd "C-x C-b") 'ibuffer) ;; Use Ibuffer for Buffer List
 
-(setq ibuffer-saved-filter-groups '(("default" ("elisp" (mode . emacs-lisp-mode)) 
-				     ("org" (or (mode . org-mode) 
-						(filename . "OrgMode"))) 
-				     ("python" (or (mode . python-mode))) 
-				     ("C++" (or (mode . c-mode) 
-						(mode . c++-mode))) 
-				     ("folders" (mode . dired-mode)) 
-				     ("tex" (mode . latex-mode)) 
-				     ("csv" (mode . csv-mode)) 
-				     ("txt" (mode . text-mode)) 
-				     ("bash" (mode . sh-mode)) 
-				     ("yml" (mode . yaml-mode))
-				     ("vterminals" (mode . vterm-mode)) 
-				     ("magit" (or (mode . magit-status-mode) 
-						  (mode . magit-diff-mode) 
-						  (mode . magit-revision-mode))) 
-				     ("MOOSE" (mode . moose-mode)))))
+(setq ibuffer-saved-filter-groups
+      '(("default"
+         ("elisp" (mode . emacs-lisp-mode))
+         ("org" (or (mode . org-mode) (filename . "OrgMode")))
+         ("python" (or (mode . python-mode)))
+         ("C++" (or (mode . c-mode) (mode . c++-mode)))
+         ("folders" (mode . dired-mode))
+         ("tex" (mode . latex-mode))
+         ("csv" (mode . csv-mode))
+         ("txt" (mode . text-mode))
+         ("bash" (mode . sh-mode))
+         ("yml" (mode . yaml-mode))
+         ("vterminals" (mode . vterm-mode))
+         ("magit" (or (mode . magit-status-mode)
+                      (mode . magit-diff-mode)
+                      (mode . magit-revision-mode)))
+         ("MOOSE" (mode . moose-mode)))))
 
 (setq ibuffer-expert t)
 (setq ibuffer-show-empty-filter-groups nil)
 
-(add-hook 'ibuffer-mode-hook '(lambda () 
-				(ibuffer-switch-to-saved-filter-groups "default")))
+(add-hook 'ibuffer-mode-hook
+          (lambda ()
+            (ibuffer-switch-to-saved-filter-groups "default")))
 
 ;; automatically refresh ibuffer
-(add-hook 'ibuffer-mode-hook (lambda () 
-			       (ibuffer-auto-mode 1)))
+(add-hook 'ibuffer-mode-hook (lambda () (ibuffer-auto-mode 1)))
 
 ;; human readable size column
-(defun ajv/human-readable-file-sizes-to-bytes (string) 
-  "Convert a human-readable file size into bytes." 
-  (interactive) 
-  (cond ((string-suffix-p "G" string t) 
-	 (* 1000000000 (string-to-number (substring string 0 (- (length string) 1))))) 
-	((string-suffix-p "M" string t) 
-	 (* 1000000 (string-to-number (substring string 0 (- (length string) 1))))) 
-	((string-suffix-p "K" string t) 
-	 (* 1000 (string-to-number (substring string 0 (- (length string) 1))))) 
-	(t (string-to-number (substring string 0 (- (length string) 1))))))
+(defun ajv/human-readable-file-sizes-to-bytes (string)
+  "Convert a human-readable file size into bytes."
+  (interactive)
+  (cond
+   ((string-suffix-p "G" string t)
+    (* 1000000000
+       (string-to-number (substring string 0 (- (length string) 1)))))
+   ((string-suffix-p "M" string t)
+    (* 1000000
+       (string-to-number (substring string 0 (- (length string) 1)))))
+   ((string-suffix-p "K" string t)
+    (* 1000
+       (string-to-number (substring string 0 (- (length string) 1)))))
+   (t (string-to-number (substring string 0 (- (length string) 1))))))
 
-(defun ajv/bytes-to-human-readable-file-sizes (bytes) 
-  "Convert number of bytes to human-readable file size." 
-  (interactive) 
-  (cond ((> bytes 1000000000) 
-	 (format "%10.1fG" (/ bytes 1000000000.0))) 
-	((> bytes 100000000) 
-	 (format "%10.0fM" (/ bytes 1000000.0))) 
-	((> bytes 1000000) 
-	 (format "%10.1fM" (/ bytes 1000000.0))) 
-	((> bytes 100000) 
-	 (format "%10.0fk" (/ bytes 1000.0))) 
-	((> bytes 1000) 
-	 (format "%10.1fk" (/ bytes 1000.0))) 
-	(t (format "%10d" bytes))))
+(defun ajv/bytes-to-human-readable-file-sizes (bytes)
+  "Convert number of bytes to human-readable file size."
+  (interactive)
+  (cond
+   ((> bytes 1000000000) (format "%10.1fG" (/ bytes 1000000000.0)))
+   ((> bytes 100000000) (format "%10.0fM" (/ bytes 1000000.0)))
+   ((> bytes 1000000) (format "%10.1fM" (/ bytes 1000000.0)))
+   ((> bytes 100000) (format "%10.0fk" (/ bytes 1000.0)))
+   ((> bytes 1000) (format "%10.1fk" (/ bytes 1000.0)))
+   (t (format "%10d" bytes))))
 
 ;; Use human readable Size column instead of original one
-(define-ibuffer-column size-h 
-  (:name "Size" 
-	 :inline t 
-	 :summarizer (lambda (column-strings) 
-		       (let ((total 0)) 
-			 (dolist (string column-strings) 
-			   (setq total
-				 ;; like, ewww ...
-				 (+ (float (ajv/human-readable-file-sizes-to-bytes string)) total))) 
-			 (ajv/bytes-to-human-readable-file-sizes total))) ;; :summarizer nil
-	 ) 
+(define-ibuffer-column size-h
+  (:name "Size"
+         :inline t
+         :summarizer
+         (lambda (column-strings)
+           (let ((total 0))
+             (dolist (string column-strings)
+               (setq total
+                     ;; like, ewww ...
+                     (+ (float (ajv/human-readable-file-sizes-to-bytes string))
+                        total)))
+             (ajv/bytes-to-human-readable-file-sizes total))))
   (ajv/bytes-to-human-readable-file-sizes (buffer-size)))
 
 ;; Modify the default ibuffer-formats
-(setq ibuffer-formats '((mark modified read-only locked " " (name 20 20 
+(setq ibuffer-formats
+      '((mark modified read-only locked
+              " "
+              (name 20 20 :left :elide)
+              " "
+              (size-h 11 -1 :right)
+              " "
+              (mode 16 16 :left :elide)
+              " "
+              filename-and-process)
+        (mark " " (name 16 -1) " " filename)))
 
-								  :left 
-								  :elide) " " (size-h 11 -1 
-										      :right) " "
-										      (mode 16 16 
-
-											    :left 
-											    :elide)
-										      " "
-										      filename-and-process) 
-			(mark " " (name 16 -1) " " filename)))
-
-(defun ibuffer-advance-motion (direction) 
-  (forward-line direction) 
-  (beginning-of-line) 
-  (if (not (get-text-property (point) 'ibuffer-filter-group-name)) t (ibuffer-skip-properties
-								      '(ibuffer-filter-group-name)
-								      direction) nil))
+(defun ibuffer-advance-motion (direction)
+  (forward-line direction)
+  (beginning-of-line)
+  (if (not (get-text-property (point) 'ibuffer-filter-group-name))
+      t
+    (ibuffer-skip-properties '(ibuffer-filter-group-name) direction)
+    nil))
 
 ;; Improve line movement in ibuffer
-(defun ibuffer-previous-line 
-    (&optional 
-     arg)
-  "Move backwards ARG lines, wrapping around the list if necessary." 
-  (interactive "P") 
-  (or arg 
-      (setq arg 1)) 
-  (let (err1 err2) 
-    (while (> arg 0) 
-      (cl-decf arg) 
-      (setq err1 (ibuffer-advance-motion -1) err2 (if (not (get-text-property (point)
-									      'ibuffer-title)) t
-						    (goto-char (point-max)) 
-						    (beginning-of-line) 
-						    (ibuffer-skip-properties '(ibuffer-summary
-									       ibuffer-filter-group-name)
-									     -1) nil))) 
-    (and err1 
-	 err2)))
+(defun ibuffer-previous-line (&optional arg)
+  "Move backwards ARG lines, wrapping around the list if necessary."
+  (interactive "P")
+  (or arg (setq arg 1))
+  (let (err1 err2)
+    (while (> arg 0)
+      (cl-decf arg)
+      (setq err1 (ibuffer-advance-motion -1)
+            err2 (if (not (get-text-property (point) 'ibuffer-title))
+                     t
+                   (goto-char (point-max))
+                   (beginning-of-line)
+                   (ibuffer-skip-properties '(ibuffer-summary ibuffer-filter-group-name) -1)
+                   nil)))
+    (and err1 err2)))
 
-(defun ibuffer-next-line 
-    (&optional 
-     arg)
-  "Move forward ARG lines, wrapping around the list if necessary." 
-  (interactive "P") 
-  (or arg 
-      (setq arg 1)) 
-  (let (err1 err2) 
-    (while (> arg 0) 
-      (cl-decf arg) 
-      (setq err1 (ibuffer-advance-motion 1) err2 (if (not (get-text-property (point)
-									     'ibuffer-summary)) t
-						   (goto-char (point-min)) 
-						   (beginning-of-line) 
-						   (ibuffer-skip-properties '(ibuffer-summary
-									      ibuffer-filter-group-name
-									      ibuffer-title) 1)
-						   nil))) 
-    (and err1 
-	 err2)))
+(defun ibuffer-next-line (&optional arg)
+  "Move forward ARG lines, wrapping around the list if necessary."
+  (interactive "P")
+  (or arg (setq arg 1))
+  (let (err1 err2)
+    (while (> arg 0)
+      (cl-decf arg)
+      (setq err1 (ibuffer-advance-motion 1)
+            err2 (if (not (get-text-property (point) 'ibuffer-summary))
+                     t
+                   (goto-char (point-min))
+                   (beginning-of-line)
+                   (ibuffer-skip-properties
+                    '(ibuffer-summary ibuffer-filter-group-name ibuffer-title) 1)
+                   nil)))
+    (and err1 err2)))
 
 ;; Improve header movement in ibuffer
-(defun ibuffer-next-header () 
-  (interactive) 
+(defun ibuffer-next-header ()
+  (interactive)
   (while (ibuffer-next-line)))
 
-(defun ibuffer-previous-header () 
-  (interactive) 
+(defun ibuffer-previous-header ()
+  (interactive)
   (while (ibuffer-previous-line)))
 
 (define-key ibuffer-mode-map (kbd "<up>") 'ibuffer-previous-line)
@@ -742,168 +724,157 @@
 
 ;; -------------------------------------------- python
 
-;; myPackages contains a list of package names
-(defvar myPackages 
-  '(better-defaults ;; Set up some better Emacs defaults
-    elpy	    ;; Emacs Lisp Python Environment
-    flycheck	    ;; On the fly syntax checking
-    blacken	    ;; Black formatting on save
-    magit	    ;; Git integration
-    ))
+;; Disable startup message
+(setq inhibit-startup-message t)
 
-(setq inhibit-startup-message t) ;; Hide the startup message
-;; (global-linum-mode t)		 ;; Enable line numbers globally
-;; (global-display-line-numbers-mode t)
+;; Enable elpy with use-package
+(use-package elpy
+  :ensure t
+  :init
+  (elpy-enable)
+  :hook
+  ((elpy-mode . blacken-mode)
+   (elpy-mode . flycheck-mode)
+   (elpy-mode . (lambda () (pyvenv-activate "~/miniconda3/envs/oo")))
+   (elpy-mode . (lambda () (highlight-indentation-mode -1)))
+   (elpy-mode . (lambda () (local-set-key (kbd "C-c <C-return>") 'run-pycell))))
+  :config
+  ;; Replace flymake with flycheck
+  (when (require 'flycheck nil t)
+    (setq elpy-modules (delq 'elpy-module-flymake elpy-modules))
+    (add-hook 'elpy-mode-hook 'flycheck-mode))
+  ;; Use ipython for run-python
+  (setq python-shell-interpreter "ipython"
+        python-shell-interpreter-args "-i --simple-prompt"))
 
-;; Enable elpy
-(elpy-enable)
+;; Blacken package for auto-formatting Python code
+(use-package blacken
+  :ensure t)
 
-;; Enable Black
-(add-hook 'elpy-mode-hook #'blacken-mode)
+;; Flycheck setup with pos-tip integration and face adjustments
+(use-package flycheck
+  :ensure t
+  :defer t
+  :config
+  (with-eval-after-load 'flycheck
+    (flycheck-pos-tip-mode))
+  ;; Disable warnings and infos in fringe and underline
+  (set-face-attribute 'flycheck-fringe-warning nil
+                      :foreground (face-attribute 'fringe :background))
+  (set-face-attribute 'flycheck-fringe-info nil
+                      :foreground (face-attribute 'fringe :background))
+  (set-face-attribute 'flycheck-warning nil :underline nil)
+  (set-face-attribute 'flycheck-info nil :underline nil))
 
-;; Enable flycheck
-(add-hook 'elpy-mode-hook #'flycheck-mode)
+;; Magit for Git integration
+(use-package magit
+  :ensure t)
 
-;; Enable Flycheck
-(when 
-    (require 'flycheck nil t) 
-  (setq elpy-modules (delq 'elpy-module-flymake elpy-modules)) 
-  (add-hook 'elpy-mode-hook 'flycheck-mode))
+;; sphinx-doc for docstring skeletons in python
+(use-package sphinx-doc
+  :ensure t
+  :hook (python-mode . sphinx-doc-mode))
 
-;; activate EO-IO environment on start
-(add-hook 'elpy-mode-hook '(lambda () 
-			     (pyvenv-activate "~/mambaforge3/envs/EO-IO")))
+;; linum for line numbers colors
+(use-package linum
+  :ensure nil
+  :config
+  (set-face-background 'linum "#222b35")
+  (set-face-foreground 'linum "#999999"))
 
-;; run ipython instead of python with run-python
-(setq python-shell-interpreter "ipython3" python-shell-interpreter-args "-i --simple-prompt")
+;; hlinum for highlighting current line number
+(use-package hlinum
+  :ensure t
+  :config
+  (hlinum-activate)
+  (set-face-foreground 'linum-highlight-face "#ffffff")
+  (set-face-background 'linum-highlight-face "#222b35"))
 
-;; display errors and warnings in pos-tip popups
-(with-eval-after-load 'flycheck (flycheck-pos-tip-mode))
+;; code-cells package for jupyter notebook cell detection and running
+(use-package code-cells
+  :load-path "~/.emacs.d/code-cells.el"
+  :commands (code-cells-mark-cell code-cells-forward-cell))
 
-;; make flycheck inline errors red
-;; (set-face-attribute 'flycheck-error nil :underline '(:color "red2" :style wave))
-
-;; disable flycheck warnings and infos
-(set-face-attribute 'flycheck-fringe-warning nil 
-		    :foreground (face-attribute 'fringe 
-						:background ))
-(set-face-attribute 'flycheck-fringe-info nil 
-		    :foreground (face-attribute 'fringe 
-						:background ))
-(set-face-attribute 'flycheck-warning nil 
-		    :underline nil)
-(set-face-attribute 'flycheck-info nil 
-		    :underline nil)
-
-;; automatic python header
-(auto-insert-mode 1)
-(eval-after-load 'autoinsert '(define-auto-insert '("\\.\\py\\'" . "python-UZH-header") 
-				'("" "#!/usr/bin/env python3" \n "# -*- coding: utf-8 -*-" \n
-				  "\"\"\"" \n \n
-				  "@author: Adrien Wehrlé, University of Zurich, Switzerland" \n \n
-				  "\"\"\"" \n \n \n)))
-
-;; automatic tex header
-(auto-insert-mode 1)
-(eval-after-load 'autoinsert '(define-auto-insert '("\\.\\tex\\'" . "latex-header") 
-				'("" "\\documentclass{article}" \n "\\usepackage[utf8]{inputenc}" \n \n
-				  "\\title{template}" \n "\\author{Adrien Wehrlé}" \n
-				  (format-time-string "\\date{%B %Y}") \n \n
-				  "\\begin{document}" \n \n "\\maketitle" \n \n
-				  "\\section{Introduction}" \n \n "\\end{document}")))
-
-
-;; disable indentation marks
-(add-hook 'elpy-mode-hook (lambda () 
-			    (highlight-indentation-mode -1)))
-
-;; prevent very long ipython buffers
-(add-hook 'inferior-python-mode-hook #'my-inferior-python-mode-hook)
-
-(defun my-inferior-python-mode-hook () 
-  "Custom `inferior-python-mode' behaviours."
-  (setq-local comint-buffer-maximum-size 2000) ;; maximum lines
-  (add-hook 'comint-output-filter-functions 'comint-truncate-buffer nil 
-	    :local))
-
-;; handy keybinding for matching history
-(add-hook 'inferior-python-mode-hook (lambda () 
-				       (local-set-key (kbd "C-c <C-up>")
-						      'comint-previous-matching-input-from-input)))
-(add-hook 'inferior-python-mode-hook (lambda () 
-				       (local-set-key (kbd "C-c <C-down>")
-						      'comint-next-matching-input-from-input)))
-
-;; go to specific indxe
-(eval-after-load 'python '(define-key python-mode-map (kbd "C-c i")
-			 'imenu))
-
-;; rename existing python instance to use a new one at next call
-(defun new-python-instance (inactive_instance_name)
-  (interactive (list (read-string "Rename inactive instance: " "*Python1*")))
-  (switch-to-buffer "*Python*")
-  (rename-buffer inactive_instance_name))
-
-;; activate existing python instance (many steps because
-;; buffer can't rename with an existing name (*Python42* is temporary)
-(defun switch-python-instance (instance_name)
-  (interactive (list (read-string "Activate instance: " "*Python1*")))
-  (switch-to-buffer instance_name)
-  (rename-buffer "*Python42*")
-  (switch-to-buffer "*Python*")
-  (rename-buffer instance_name) 
-  (switch-to-buffer "*Python42*")
-  (rename-buffer "*Python*"))
-		    
-;; detect jupyter notebook cells with code-cell
-(add-to-list 'load-path "~/.emacs.d/code-cells.el")
-(require 'code-cells)
-
-;; mark and run cell
-(defun run-pycell () 
-  (interactive) 
+;; Define your custom function to run a python cell
+(defun run-pycell ()
+  "Run current code cell with elpy."
+  (interactive)
   (code-cells-mark-cell)
   (elpy-shell-send-region-or-buffer)
   (forward-line 1)
   (code-cells-forward-cell)
+  (forward-line 1)
   (keyboard-quit))
 
-(add-hook 'elpy-mode-hook (lambda () 
-			    (local-set-key (kbd "C-c <C-return>")
-					   'run-pycell)))
+;; Inferior Python mode tweaks
+(defun my-inferior-python-mode-hook ()
+  "Customizations for inferior-python-mode."
+  (setq-local comint-buffer-maximum-size 2000)
+  (add-hook 'comint-output-filter-functions 'comint-truncate-buffer nil t)
+  ;; Keybindings for matching input history navigation
+  (local-set-key (kbd "C-c <C-up>") 'comint-previous-matching-input-from-input)
+  (local-set-key (kbd "C-c <C-down>") 'comint-next-matching-input-from-input))
 
-;; switch to ipython buffer
-;; switch to ipython buffer
+(add-hook 'inferior-python-mode-hook 'my-inferior-python-mode-hook)
+
+;; Automatically insert headers with auto-insert
+(auto-insert-mode 1)
+(eval-after-load 'autoinsert
+  '(progn
+     (define-auto-insert
+       '("\\.py\\'" . "python-UZH-header")
+       '("" "#!/usr/bin/env python3\n"
+          "# -*- coding: utf-8 -*-\n"
+          "\"\"\"\n\n"
+          "@author: Adrien Wehrlé, University of Zurich, Switzerland\n\n"
+          "\"\"\"\n\n"))
+     (define-auto-insert
+       '("\\.tex\\'" . "latex-header")
+       '("" "\\documentclass{article}\n"
+          "\\usepackage[utf8]{inputenc}\n\n"
+          "\\title{template}\n"
+          "\\author{Adrien Wehrlé}\n"
+          (format-time-string "\\date{%B %Y}\n\n")
+          "\\begin{document}\n\n"
+          "\\maketitle\n\n"
+          "\\section{Introduction}\n\n"
+          "\\end{document}"))))
+
+;; Customize fringe appearance and size
+(set-face-background 'fringe "#222b35")
+(set-face-foreground 'flycheck-fringe-error "#FF0000")
+(fringe-mode '(14 . 0))
+
+;; Handy keybinding for replace-string
+(global-set-key (kbd "C-x r") 'replace-string)
+
+;; Switch to or start ipython buffer
 (defun switch-to-ipython-buffer ()
   (interactive)
   (if (get-buffer "*Python*")
       (switch-to-buffer "*Python*")
-    ((run-python)
-     (switch-to-buffer "*Python*"))))
-  
-(global-set-key (kbd "C-c p")  #'switch-to-ipython-buffer)
+    (run-python)
+    (switch-to-buffer "*Python*")))
+(global-set-key (kbd "C-c p") #'switch-to-ipython-buffer)
 
-;; insert docstring skeleton for Python functions and methods
-(add-hook 'python-mode-hook (lambda ()
-                                  (require 'sphinx-doc)
-                                  (sphinx-doc-mode t)
-				  ))
+;; Go to specific imenu index in python-mode
+(eval-after-load 'python
+  '(define-key python-mode-map (kbd "C-c i") 'imenu))
 
-;; set linum (line numbering) colors
-(require 'linum)
-(set-face-background 'linum "#222b35")
-(set-face-foreground 'linum "#999999")
+;; Functions to rename and switch python interpreter buffers
+(defun new-python-instance (inactive-instance-name)
+  (interactive (list (read-string "Rename inactive instance: " "*Python1*")))
+  (switch-to-buffer "*Python*")
+  (rename-buffer inactive-instance-name))
 
-;; highlight current line
-(require 'hlinum)
-(hlinum-activate)
-(set-face-foreground 'linum-highlight-face "#ffffff")
-(set-face-background 'linum-highlight-face "#222b35")
-
-;; customise fringe
-(set-face-background 'fringe "#222b35")
-(set-face-foreground 'flycheck-fringe-error "#FF0000")
-(fringe-mode '(14 . 0))
+(defun switch-python-instance (instance-name)
+  (interactive (list (read-string "Activate instance: " "*Python1*")))
+  (switch-to-buffer instance-name)
+  (rename-buffer "*Python42*")
+  (switch-to-buffer "*Python*")
+  (rename-buffer instance-name)
+  (switch-to-buffer "*Python42*")
+  (rename-buffer "*Python*"))
 
 ;; -------------------------------------------- terminal emulator
 
