@@ -546,49 +546,57 @@
 
 ;; (global-set-key (kbd "C-c f") 'find-gh-code)
 
-;; a GitHub CLI client inside GNU Emacs using Consult
-;; note: make sure gh CLI is setup (gh auth login)
-(add-to-list 'load-path "~/.emacs.d/custom-modes/consult-gh")
-(require 'consult-gh)
+;; ;; a GitHub CLI client inside GNU Emacs using Consult
+;; ;; note: make sure gh CLI is setup (gh auth login)
+(use-package consult-gh
+  :ensure t
+  :after consult)
 
-;; add your main GitHub account (replace "armindarvish" with your user or org)
-(add-to-list 'consult-gh-default-orgs-list "AdrienWehrle")
+(with-eval-after-load 'consult-gh
+  ;; add your main GitHub account (replace "wehrad" with your user or org)
+  (unless (boundp 'consult-gh-default-orgs-list)
+    (defvar consult-gh-default-orgs-list nil))
+  (unless (member "wehrad" consult-gh-default-orgs-list)
+    (add-to-list 'consult-gh-default-orgs-list "wehrad"))
 
-;; ;; use "gh org list" to get a list of all your organizations and adds them to default list
-(setq consult-gh-default-orgs-list (append consult-gh-default-orgs-list (remove "" (split-string (or (consult-gh--command-to-string "org" "list") "") "\n"))))
+  ;; use "gh org list" to get a list of all your organizations and add them to default list
+  (setq consult-gh-default-orgs-list
+        (append consult-gh-default-orgs-list
+                (remove "" (split-string (or (consult-gh--command-to-string "org" "list") "") "\n"))))
 
-;; ;; set the default folder for cloning repositories, By default Consult-GH will confirm this before cloning
-(setq consult-gh-default-clone-directory "~/")
+  ;; set the default folder for cloning repositories, By default Consult-GH will confirm this before cloning
+  (setq consult-gh-default-clone-directory "~/")
 
-;; show previews
-(setq consult-gh-show-preview t)
+  ;; show previews
+  (setq consult-gh-show-preview t)
 
-;; highlight code matches
-(setq consult-gh-highlight-matches t)
+  ;; highlight code matches
+  (setq consult-gh-highlight-matches t)
 
-;;show previews on demand by hitting "M-o"
-(setq consult-gh-preview-key "M-o")
+  ;; show previews on demand by hitting "M-o"
+  (setq consult-gh-preview-key "M-o")
 
-;;show previews in org-mode
-(setq consult-gh-preview-buffer-mode 'org-mode)
+  ;; show previews in org-mode
+  (setq consult-gh-preview-buffer-mode 'org-mode)
 
-;;open files that contain code snippet in an emacs buffer
-(setq consult-gh-code-action 'consult-gh--code-view-action)
+  ;; open files that contain code snippet in an emacs buffer
+  (setq consult-gh-code-action 'consult-gh--code-view-action)
 
-;;open files in an emacs buffer
-(setq consult-gh-file-action 'consult-gh--files-view-action)
+  ;; open files in an emacs buffer
+  (setq consult-gh-file-action 'consult-gh--files-view-action)
 
-;;open file tree of repo on selection
-(setq consult-gh-repo-action 'consult-gh--repo-browse-files-action)
+  ;; open file tree of repo on selection
+  (setq consult-gh-repo-action 'consult-gh--repo-browse-files-action)
 
-;; only search my own codebase
-(defun consult-gh-search-my-code (&optional initial repo noaction)
-  "Search my own code"
-  (interactive)
-  (let ((consult-gh-search-code-args (append consult-gh-search-code-args '("--owner=AdrienWehrle"))))
-    (consult-gh-search-code initial repo noaction)))
+  ;; only search my own codebase
+  (defun consult-gh-search-my-code (&optional initial repo noaction)
+    "Search my own code"
+    (interactive)
+    (let ((consult-gh-search-code-args (append consult-gh-search-code-args
+                                              '("--owner=wehrad"))))
+      (consult-gh-search-code initial repo noaction)))
 
-(global-set-key (kbd "C-c f") 'consult-gh-search-my-code)
+  (global-set-key (kbd "C-c f") 'consult-gh-search-my-code))
 
 ;; -------------------------------------------- MOOSE
 
