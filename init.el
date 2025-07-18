@@ -244,14 +244,17 @@
 (setq inhibit-compacting-font-caches t)
 
 ;; Jump multiple lines at once (efficient travelling)
-(global-set-key (kbd "C-d") 
-		(lambda () 
-		  (interactive) 
-		  (previous-line 10)))
-(global-set-key (kbd "C-f") 
-		(lambda () 
-		  (interactive) 
-		  (next-line 10)))
+(defun my/move-up-10-lines ()
+  "Move cursor up 10 lines."
+  (interactive)
+  (previous-line 10))
+(defun my/move-down-10-lines ()
+  "Move cursor up 10 lines."
+  (interactive)
+  (next-line 10))
+
+(global-set-key (kbd "C-d") 'my/move-up-10-lines)
+(global-set-key (kbd "C-f") 'my/move-down-10-lines)
 
 ;; move to the middle of the current line
 (defun my/move-to-middle () 
