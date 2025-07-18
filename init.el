@@ -249,7 +249,7 @@
   (interactive)
   (previous-line 10))
 (defun my/move-down-10-lines ()
-  "Move cursor up 10 lines."
+  "Move cursor down 10 lines."
   (interactive)
   (next-line 10))
 
