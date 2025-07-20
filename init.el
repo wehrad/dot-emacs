@@ -153,6 +153,18 @@
   (LaTeX-mode . auto-fill-mode)
   (flyspell-mode . flyspell-buffer)
   :config
+  
+  ;; set font size for the different section titles
+  (with-eval-after-load 'font-latex
+  (dolist (face '(font-latex-sectioning-0-face  ; \part
+                  font-latex-sectioning-1-face  ; \chapter
+                  font-latex-sectioning-2-face  ; \section
+                  font-latex-sectioning-3-face  ; \subsection
+                  font-latex-sectioning-4-face  ; \subsubsection
+                  font-latex-sectioning-5-face)) ; \paragraph
+    (when (facep face)
+      (set-face-attribute face nil :height 1.1))))
+  
   (setq reftex-plug-into-AUCTeX t)
   (setq fill-column 70)
   (setq ring-bell-function 'ignore)
