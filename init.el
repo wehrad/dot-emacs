@@ -899,6 +899,19 @@
   (switch-to-buffer "*Python42*")
   (rename-buffer "*Python*"))
 
+(defun my/python-close-all-figures ()
+  "Send plt.close('all') to the Python process."
+  (interactive)
+  (when (python-shell-get-process)
+    (python-shell-send-string
+     "import matplotlib.pyplot as plt; plt.close('all')")))
+
+(with-eval-after-load 'python
+  (define-key python-mode-map (kbd "C-c f")
+    #'my/python-close-all-figures)
+  (define-key inferior-python-mode-map (kbd "C-c f")
+    #'my/python-close-all-figures))
+
 ;; -------------------------------------------- terminal emulator
 
 (use-package multi-vterm
