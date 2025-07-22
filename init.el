@@ -927,6 +927,19 @@
   (define-key inferior-python-mode-map (kbd "C-c f")
     #'my/python-close-all-figures))
 
+(defun my/python-activate-interactive-mode ()
+  "Send plt.ion() to the Python process."
+  (interactive)
+  (when (python-shell-get-process)
+    (python-shell-send-string
+     "import matplotlib.pyplot as plt; plt.ion()")))
+
+(with-eval-after-load 'python
+  (define-key python-mode-map (kbd "C-c i")
+    #'my/python-activate-interactive-mode)
+  (define-key inferior-python-mode-map (kbd "C-c i")
+    #'my/python-activate-interactive-mode))
+
 ;; -------------------------------------------- terminal emulator
 
 (use-package multi-vterm
