@@ -940,6 +940,47 @@
   (define-key inferior-python-mode-map (kbd "C-c i")
     #'my/python-activate-interactive-mode))
 
+;; move across ipython prompts
+(add-hook 'inferior-python-mode-hook
+          (lambda ()
+            (local-set-key (kbd "M-<up>") #'comint-previous-prompt)
+            (local-set-key (kbd "M-<down>") #'comint-next-prompt)))
+
+;; list variables in current python console
+(defun my/python-show-user-vars ()
+  "Show user-defined Python variables with type and shape/len."
+  (interactive)
+  (let ((python-code
+         "import sys
+import types
+import numpy as np
+
+def user_vars():
+    for name, val in globals().items():
+        if name.startswith('_'):
+            continue
+        if isinstance(val, types.ModuleType):
+            continue
+        if name in [\"In\", \"Out\", \"get_ipython\",
+                    \"exit\", \"quit\", \"open\", \"user_vars\"]:
+            continue
+
+        t = type(val).__name__
+        shape = ''
+        if hasattr(val, 'shape'):
+            shape = f', shape={val.shape}'
+        elif hasattr(val, '__len__'):
+            shape = f', len={len(val)}'
+        print(f'{name}: {t}{shape}')
+
+user_vars()
+"))
+    (python-shell-send-string python-code)))
+
+(with-eval-after-load 'python
+  (define-key inferior-python-mode-map (kbd "C-c l")
+	      #'my/python-show-user-vars))
+
 ;; -------------------------------------------- terminal emulator
 
 (use-package multi-vterm
