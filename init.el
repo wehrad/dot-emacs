@@ -748,26 +748,27 @@
 (define-key ibuffer-mode-map (kbd "<left>") 'ibuffer-previous-header)
 
  ;; Group buffers by version control project on request
-(require 'ibuffer-vc)
+(use-package ibuffer-vc
+  :ensure t
+  :config
+  (defvar my/ibuffer-vc-groups-active nil
+    "Non-nil if VC grouping is active in ibuffer.")
 
-(defvar my/ibuffer-vc-groups-active nil
-  "Non-nil if VC grouping is active in ibuffer.")
+  (defun my/ibuffer-toggle-vc-groups ()
+    "Toggle VC root grouping in ibuffer."
+    (interactive)
+    (if my/ibuffer-vc-groups-active
+        (progn
+          (ibuffer-switch-to-saved-filter-groups "default")
+          (setq my/ibuffer-vc-groups-active nil)
+          (message "ibuffer: default filter groups"))
+      (ibuffer-vc-set-filter-groups-by-vc-root)
+      (setq my/ibuffer-vc-groups-active t)
+      (message "ibuffer: VC root filter groups"))
+    (ibuffer-update nil t))
 
-(defun my/ibuffer-toggle-vc-groups ()
-  "Toggle VC root grouping in ibuffer."
-  (interactive)
-  (if my/ibuffer-vc-groups-active
-      (progn
-        (ibuffer-switch-to-saved-filter-groups "default")
-        (setq my/ibuffer-vc-groups-active nil)
-        (message "ibuffer: default filter groups"))
-    (ibuffer-vc-set-filter-groups-by-vc-root)
-    (setq my/ibuffer-vc-groups-active t)
-    (message "ibuffer: VC root filter groups"))
-  (ibuffer-update nil t))
-
-(with-eval-after-load 'ibuffer
-  (define-key ibuffer-mode-map (kbd "v") 'my/ibuffer-toggle-vc-groups))
+  (with-eval-after-load 'ibuffer
+    (define-key ibuffer-mode-map (kbd "v") 'my/ibuffer-toggle-vc-groups)))
 
 ;; -------------------------------------------- julia
 
