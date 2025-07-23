@@ -157,13 +157,15 @@
 
 ;; -------------------------------------------- yaml
 
-(require 'yaml-mode) 
-(add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode))
+(use-package yaml-mode
+  :ensure t
+  :mode ("\\.yml\\'" . yaml-mode))
 
 ;; -------------------------------------------- json
 
-(require 'json-mode)
-(add-to-list 'auto-mode-alist '("\\.json\\'" . json-mode))
+(use-package json-mode
+  :ensure t
+  :mode ("\\.json\\'" . json-mode))
 ;; (add-hook 'json-mode-hook 'json-mode-beautify)
 
 ;; -------------------------------------------- tex
