@@ -543,8 +543,9 @@
 
 ;; syntax highlighting for MOOSE input and test files
 (use-package moose-mode
-  :straight (:host github :repo "dylanjm/emacs-moose-mode")
-  :mode ("\\.i\\'" . moose-mode))
+  :straight (:host github :repo "dylanjm/emacs-moose-mode"
+             :build nil)  ;; skip build step
+  :mode ("\\.moose\\'" . moose-mode))
 
 (with-eval-after-load 'moose-mode
   (add-to-list 'auto-mode-alist '("\\.i\\'" . moose-mode)))
