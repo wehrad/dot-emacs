@@ -1,10 +1,29 @@
+;; package.el and MELPA setup
 (require 'package)
-
-(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
-
+(add-to-list 'package-archives
+             '("melpa" . "https://melpa.org/packages/")
+             t)
 (package-initialize)
-(unless (package-installed-p 'use-package) 
-  (package-refresh-contents) 
+
+;; Bootstrap straight.el (used for git cloning only)
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name
+        "straight/repos/straight.el/bootstrap.el"
+        user-emacs-directory))
+      (bootstrap-version 6))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+
+;; Install use-package via package.el if missing
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
   (package-install 'use-package))
 
 ;; If there are no archived package contents, refresh them
@@ -14,13 +33,19 @@
 (setq byte-compile-warnings '(cl-functions))
 (require 'cl-lib)
 
-;; spacemacs dark theme in default emacs
-(load-theme 'spacemacs-dark t)
+;; spacemacs dark theme
+(use-package spacemacs-theme
+  :ensure t
+  :config
+  (load-theme 'spacemacs-dark t))
 
-;; spacemacs mode line in default emacs
-(require 'spaceline-config)
-(spaceline-spacemacs-theme)
-(spaceline-helm-mode 1)
+;; spacemacs mode line
+(use-package spaceline
+  :ensure t
+  :config
+  (require 'spaceline-config)
+  (spaceline-spacemacs-theme)
+  (spaceline-helm-mode 1))
 
 ;; have mode icons instead of names
 ;; (mode-icons-mode)
@@ -514,9 +539,12 @@
 ;; -------------------------------------------- MOOSE
 
 ;; syntax highlighting for MOOSE input and test files
-;; https://github.com/dylanjm/emacs-moose-mode
-(add-to-list 'load-path "~/.emacs.d/custom-modes/emacs-moose-mode")
-(require 'moose-mode)
+(use-package moose-mode
+  :straight (:host github :repo "dylanjm/emacs-moose-mode")
+  :mode ("\\.i\\'" . moose-mode))
+
+(with-eval-after-load 'moose-mode
+  (add-to-list 'auto-mode-alist '("\\.i\\'" . moose-mode)))
 
 ;; -------------------------------------------- C++
 
