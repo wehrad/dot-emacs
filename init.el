@@ -772,15 +772,19 @@
 
 ;; -------------------------------------------- julia
 
-(require 'julia-mode)
-(require 'julia-repl)
-(add-hook 'julia-mode-hook 'julia-repl-mode)
-(add-hook 'julia-mode-hook 'eglot-jl-init)
-(add-hook 'julia-mode-hook 'eglot-ensure)
+(use-package julia-mode
+  :ensure t
+  :mode "\\.jl\\'"
+  :hook ((julia-mode . julia-repl-mode)
+         (julia-mode . eglot-jl-init)
+         (julia-mode . eglot-ensure)
+         (julia-mode .
+          (lambda ()
+            (local-set-key (kbd "C-d") #'julia-repl-send-line)
+            (local-set-key (kbd "C-c C-c") #'julia-repl-send-buffer)))))
 
-(add-hook 'julia-mode-hook '(lambda () 
-			      (local-set-key (kbd "C-d") 'julia-repl-send-line) 
-			      (local-set-key (kbd "C-c C-c") 'julia-repl-send-buffer)))
+(use-package julia-repl
+  :ensure t)
 
 ;; -------------------------------------------- matlab/octave
 
