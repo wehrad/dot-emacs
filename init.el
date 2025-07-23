@@ -323,9 +323,13 @@
 ;; add some other common separators
 (setq csv-separators '(";" "," "\t"))
 
-;; facilite move to beginning/end of buffer
+;; move to beginning/end of buffer
 (global-set-key (kbd "C-,") 'beginning-of-buffer)
 (global-set-key (kbd "C-.") 'end-of-buffer)
+
+;; scroll buffer per full page
+(global-set-key (kbd "C-c C-<up>") #'scroll-down-command)
+(global-set-key (kbd "C-c C-<down>") #'scroll-up-command)
 
 ;; give a DOI, get a bibtex entry (complementary to org-ref)
 (defun get-bibtex-from-doi (doi) 
