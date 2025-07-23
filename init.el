@@ -235,7 +235,8 @@
 
 ;;;  format elisp code
 ;; (add-hook 'emacs-lisp-mode-hook (lambda ()
-;; 				  (add-hook 'after-save-hook 'elisp-format-buffer)))
+;; 				  (add-hook 'after-save-hook
+;; 					    'elisp-format-buffer)))
 
 ;; always reload files if they changed on disk
 (setq global-auto-revert-mode t)
@@ -244,7 +245,7 @@
 (setq scroll-preserve-screen-position t)
 
 ;; start emacs as server
-;; (server-start)
+(server-start)
 
 ;; simple window traveling
 (windmove-default-keybindings)
@@ -261,19 +262,22 @@
   (interactive)
   (previous-line 10))
 (defun my/move-down-10-lines ()
-  "Move cursor down 10 lines."
+  "Move cursor up 10 lines."
   (interactive)
   (next-line 10))
 
 (global-set-key (kbd "C-d") 'my/move-up-10-lines)
 (global-set-key (kbd "C-f") 'my/move-down-10-lines)
 
+(global-set-key (kbd "C-c C-<up>") #'scroll-down-command)
+(global-set-key (kbd "C-c C-<down>") #'scroll-up-command)
+
 ;; move to the middle of the current line
-(defun my/move-to-middle () 
-  (interactive) 
-  (let* ((begin (line-beginning-position)) 
-	 (end (line-end-position)) 
-	 (middle (/ (+ end begin) 2))) 
+(defun my/move-to-middle ()
+  (interactive)
+  (let* ((begin (line-beginning-position))
+	 (end (line-end-position))
+	 (middle (/ (+ end begin) 2)))
     (goto-char middle)))
 (global-set-key (kbd "M-s") 'my/move-to-middle)
 
@@ -294,69 +298,59 @@
 ;; some upper limits on sizes
 (setq max-lisp-eval-depth '40000)
 (setq max-specpdl-size '100000)
-(setq undo-limit 40000
-      undo-outer-limit 8000000
-      undo-strong-limit 100000)
+(setq undo-limit 400000
+      undo-outer-limit 80000000
+      undo-strong-limit 1000000)
 
 ;; simple window switch
 (windmove-default-keybindings)
 
 ;; auto bullet mode
-(require 'org-bullets)
-(add-hook 'org-mode-hook (lambda () 
-			   (org-bullets-mode 1)))
-
-;; enable tree-sitter
-;; (global-tree-sitter-mode)
+(use-package org-bullets
+  :ensure t
+  :hook (org-mode . org-bullets-mode))
 
 ;; enable dumb jump (M-.)
-(add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
+(use-package dumb-jump
+  :ensure t
+  :hook (xref-backend-functions . dumb-jump-xref-activate))
 
 ;; show current match and number of matches
-(global-anzu-mode +1)
-;; let spaceline take car of matches
-(setq anzu-cons-mode-line-p nil)
+(use-package anzu
+  :ensure t
+  :config
+  (global-anzu-mode +1)
+  ;; let spaceline take car of matches
+  (setq anzu-cons-mode-line-p nil))
 
 ;; activate csv-mode for csv and txt files
-(add-to-list 'auto-mode-alist '("\\.csv\\'" . csv-mode))
-(add-to-list 'auto-mode-alist '("\\.txt\\'" . csv-mode))
-;; add some other common separators
-(setq csv-separators '(";" "," "\t"))
-
-;; move to beginning/end of buffer
-(global-set-key (kbd "C-,") 'beginning-of-buffer)
-(global-set-key (kbd "C-.") 'end-of-buffer)
-
-;; scroll buffer per full page
-(global-set-key (kbd "C-c C-<up>") #'scroll-down-command)
-(global-set-key (kbd "C-c C-<down>") #'scroll-up-command)
+(use-package csv-mode
+  :ensure t
+  :mode ("\\.csv\\'" "\\.txt\\'")
+  :config
+  ;; add some other common separators
+  (setq csv-separators '(";" "," "\t")))
 
 ;; give a DOI, get a bibtex entry (complementary to org-ref)
-(defun get-bibtex-from-doi (doi) 
-  "Get a BibTeX entry from the DOI" 
-  (interactive "MDOI: ") 
-  (let ((url-mime-accept-string "text/bibliography;style=bibtex")) 
-    (with-current-buffer (url-retrieve-synchronously (format "http://dx.doi.org/%s"
-							     (replace-regexp-in-string
-							      "http://dx.doi.org/" "" doi))) 
-      (switch-to-buffer (current-buffer)) 
-      (goto-char (point-max)) 
-      (setq bibtex-entry 
-	    (buffer-substring 
-	     (string-match "@" (buffer-string)) 
-	     (point))) 
-      (kill-buffer (current-buffer)))) 
-  (insert (decode-coding-string bibtex-entry 'utf-8)) 
+(defun get-bibtex-from-doi (doi)
+  "Get a BibTeX entry from the DOI"
+  (interactive "MDOI: ")
+  (let ((url-mime-accept-string "text/bibliography;style=bibtex"))
+    (with-current-buffer
+	(url-retrieve-synchronously
+	 (format "http://dx.doi.org/%s"
+		 (replace-regexp-in-string
+		  "http://dx.doi.org/" "" doi)))
+      (switch-to-buffer (current-buffer))
+      (goto-char (point-max))
+      (setq bibtex-entry
+	    (buffer-substring
+	     (string-match "@" (buffer-string))
+	     (point)))
+      (kill-buffer (current-buffer))))
+  (insert (decode-coding-string bibtex-entry 'utf-8))
   (bibtex-fill-entry))
 (global-set-key (kbd "C-c b") 'get-bibtex-from-doi)
-
-(use-package 
-  org-ref 
-  :custom (reftex-default-bibliography '("~/org/references.bib")) 
-  (org-ref-bibliography-notes "~/org/notes.org") 
-  (org-ref-default-bibliography '("~/org/references.bib")) 
-  (org-ref-pdf-directory "~/org/books") ;; keep the final slash off
-  )
 
 ;; write bibtex entry in bib from DOI
 (global-set-key (kbd "C-c u") 'org-ref-url-html-to-bibtex)
@@ -370,14 +364,11 @@
 ;; git blame
 (defun vc-msg-hook-setup (vcs-type commit-info)
   ;; copy commit id to clipboard
-  (message (format "%s\n%s\n%s\n%s" (plist-get commit-info 
-					       :id) 
-		   (plist-get commit-info 
-			      :author) 
-		   (plist-get commit-info 
-			      :author-time) 
-		   (plist-get commit-info 
-			      :author-summary))))
+  (message (format "%s\n%s\n%s\n%s"
+		   (plist-get commit-info :id)
+		   (plist-get commit-info :author)
+		   (plist-get commit-info :author-time)
+		   (plist-get commit-info :author-summary))))
 (add-hook 'vc-msg-hook 'vc-msg-hook-setup)
 
 ;; show file VC historic
@@ -385,9 +376,8 @@
 
 ;; list pattern occurences in current buffer and go
 (use-package loccur
-  :bind ((
-          ("C-o" .  loccur-isearch)
-          )))
+  :ensure t
+  :bind (("C-o" . loccur-isearch)))
 
 ;; show clipboard history (in buffer)
 (global-set-key (kbd "M-y") 'helm-show-kill-ring)
@@ -396,24 +386,33 @@
 (global-set-key (kbd "C-t") 'yank-pop)
 
 ;; use helm mainly for pattern search
-(add-to-list 'load-path "~/.emacs.d/helm")
-(require 'helm-config)
+(use-package helm
+  :ensure t
+  :config
+  (setq helm-locate-command "locate %s -wAe --regex %s")
+  (setq helm-find-files-sort-directories t)
+  (setq helm-semantic-fuzzy-match t)
+  (setq helm-completion-in-region-fuzzy-match t)
+  (global-set-key (kbd "M-X") 'helm-M-x)
 
-;; find file or buffer matching pattern and open
-(setq helm-locate-command "locate %s -wAe --regex %s")
-(setq helm-find-files-sort-directories t)
-(setq helm-semantic-fuzzy-match t)
-(setq helm-completion-in-region-fuzzy-match t)
-(global-set-key (kbd "M-X")  'helm-M-x)
-(global-set-key (kbd "C-o")  'helm-occur)
-(global-set-key (kbd "C-x C-d")  'helm-for-files)
+  (defun my/right-window ()
+    "Return the rightmost window in the current frame."
+    (car (last (window-list))))
 
-;; show kill ring history
-(global-set-key (kbd "M-y") 'helm-show-kill-ring)
+  ;; run helm-for-files in right window instead of minibuffer
+  (setq helm-display-function
+	(lambda (buf _)
+          (let ((win (my/right-window)))
+            (if (window-live-p win)
+		(set-window-buffer win buf)
+              (display-buffer-pop-up-window buf)))))
+  
+  (global-set-key (kbd "C-x C-d") 'helm-for-files)
+  (global-set-key (kbd "M-y") 'helm-show-kill-ring))
 
-;; use helm mainly for pattern search
-(add-to-list 'load-path "~/.emacs.d/color-moccur.el")
-(require 'color-moccur)
+;; use color-moccur from MELPA
+(use-package color-moccur
+  :ensure t)
 
 ;; vertical completion in minibuffer
 (use-package vertico
@@ -431,7 +430,14 @@
 
 ;; use bufler to group buffers per project
 (use-package bufler
-  :config (bind-key "C-c C-b" #'bufler-list))
+  :ensure t
+  :bind ("C-c C-b" . bufler-list))
+
+;; updatedb settings for better helm locate
+;; 0 * * * * updatedb -o ~/.cache/mydb.db -U $HOME
+(setq locate-db-file "~/.cache/locate.db")
+
+;; (completion-preview-mode 1)
 
 ;; -------------------------------------------- git
 
