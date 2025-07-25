@@ -27,6 +27,6 @@ jobs:
       run: |
         emacs --batch \
           -L ~/.emacs.d/lisp/emacs-moose-mode \
-          -l ~/.emacs.d/init.el \
+          -l ~/init.el \
           --eval "(message \"Loaded moose-mode from: %s\" (locate-library \"moose-mode\"))"
           --eval "(elisp-check-file \"init.el\" :ignore-warnings t)"
