@@ -5,15 +5,6 @@
              t)
 (package-initialize)
 
-(defvar my/debug-logs-enabled
-  (or noninteractive               ;; Emacs started non-interactively (CI)
-      (getenv "CI"))              ;; Environment variable CI present (GitHub Actions sets this)
-
-(defun my/debug-message (fmt &rest args)
-  "Print debug messages safely in CI or when non-interactive."
-  (when my/debug-logs-enabled
-    (apply #'message (concat "[DEBUG] " fmt) args)))
-
 ;; Configure straight.el clone depth (must be set before bootstrap)
 (setq straight-vc-git-default-clone-depth 1)
 
@@ -553,12 +544,13 @@
 ;; -------------------------------------------- MOOSE
 
 ;; syntax highlighting for MOOSE input and test files
-(message "Some debug info: moose-mode starts here")
 (use-package moose-mode
   :straight (:host github :repo "dylanjm/emacs-moose-mode"
-		   :build nil)
+                   :build nil
+                   :no-native-compile t
+                   :no-byte-compile t
+                   :no-autoloads t)
   :mode ("\\.i\\'" . moose-mode))
-(message "Some debug info: moose-mode ends here")
 
 (with-eval-after-load 'moose-mode
   (add-to-list 'auto-mode-alist '("\\.i\\'" . moose-mode)))
