@@ -202,7 +202,8 @@
 
 ;; Cdlatex autoloads
 (use-package cdlatex
-  :defer t)
+  :defer t
+  :ensure t)
 
 ;; citar setup for citations
 (use-package citar
