@@ -543,6 +543,8 @@
 
 ;; -------------------------------------------- MOOSE
 
+(setq straight-verbose t)
+
 ;; syntax highlighting for MOOSE input and test files
 (use-package moose-mode
   :straight (:host github :repo "dylanjm/emacs-moose-mode"
