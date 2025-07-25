@@ -14,19 +14,9 @@ jobs:
           - true
     steps:
     - uses: actions/checkout@v4
-
-    - name: Cache straight.el
-      uses: actions/cache@v3
-      with:
-        path: ~/.emacs.d/straight
-        key: ${{ runner.os }}-emacs-straight-${{ hashFiles('**/*.el') }}
-        restore-keys: |
-          ${{ runner.os }}-emacs-straight-
-
     - uses: purcell/setup-emacs@master
       with:
         version: ${{ matrix.emacs_version }}
-
     - uses: leotaku/elisp-check@master
       with:
         file: init.el

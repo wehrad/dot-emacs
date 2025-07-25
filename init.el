@@ -5,8 +5,10 @@
              t)
 (package-initialize)
 
-;; Bootstrap straight.el (used for git cloning only)
+;; Configure straight.el clone depth (must be set before bootstrap)
 (setq straight-vc-git-default-clone-depth 1)
+
+;; Bootstrap straight.el (used for git cloning only)
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name
@@ -543,9 +545,8 @@
 
 ;; syntax highlighting for MOOSE input and test files
 (use-package moose-mode
-  :straight (:host github :repo "dylanjm/emacs-moose-mode"
-             :build nil)  ;; skip build step
-  :mode ("\\.moose\\'" . moose-mode))
+  :straight (:host github :repo "dylanjm/emacs-moose-mode" :build nil)
+  :mode ("\\.i\\'" . moose-mode))
 
 (with-eval-after-load 'moose-mode
   (add-to-list 'auto-mode-alist '("\\.i\\'" . moose-mode)))
