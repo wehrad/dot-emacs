@@ -5,6 +5,10 @@
              t)
 (package-initialize)
 
+(setq straight-disable-native-compile t)
+(setq native-comp-deferred-compilation nil)
+(setq comp-deferred-compilation nil)
+
 ;; Configure straight.el clone depth (must be set before bootstrap)
 (setq straight-vc-git-default-clone-depth 1)
 
@@ -545,7 +549,8 @@
 
 ;; syntax highlighting for MOOSE input and test files
 (use-package moose-mode
-  :straight (:host github :repo "dylanjm/emacs-moose-mode" :build nil)
+  :straight (:host github :repo "dylanjm/emacs-moose-mode"
+		   :build nil)
   :mode ("\\.i\\'" . moose-mode))
 
 (with-eval-after-load 'moose-mode
