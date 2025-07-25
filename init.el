@@ -5,25 +5,6 @@
              t)
 (package-initialize)
 
-;; Configure straight.el clone depth (must be set before bootstrap)
-(setq straight-vc-git-default-clone-depth 1)
-
-;; Bootstrap straight.el (used for git cloning only)
-(defvar bootstrap-version)
-(let ((bootstrap-file
-       (expand-file-name
-        "straight/repos/straight.el/bootstrap.el"
-        user-emacs-directory))
-      (bootstrap-version 6))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
-
 ;; Install use-package via package.el if missing
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
@@ -543,15 +524,10 @@
 
 ;; -------------------------------------------- MOOSE
 
-(setq straight-verbose t)
-
 ;; syntax highlighting for MOOSE input and test files
+(add-to-list 'load-path "~/.emacs.d/lisp/emacs-moose-mode")
 (use-package moose-mode
-  :straight (:host github :repo "dylanjm/emacs-moose-mode"
-                   :build nil
-                   :no-native-compile t
-                   :no-byte-compile t
-                   :no-autoloads t)
+  :load-path "~/.emacs.d/lisp/emacs-moose-mode"
   :mode ("\\.i\\'" . moose-mode))
 
 (with-eval-after-load 'moose-mode
