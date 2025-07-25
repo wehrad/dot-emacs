@@ -1013,29 +1013,33 @@ user_vars()
 
 ;; -------------------------------------------- terminal emulator
 
-(use-package multi-vterm
-  :ensure t
-  :config
-  ;; Start terminal
-  (global-set-key (kbd "C-c v") #'multi-vterm)
+(if (getenv "CI")
+    (message "CI detected — skipping multi-vterm setup")
+  (use-package multi-vterm
+    :ensure t
+    :config
+    ;; Start terminal
+    (global-set-key (kbd "C-c v") #'multi-vterm)
 
-  ;; Toggle to previous terminal instance in vterm-mode
-  (add-hook 'vterm-mode-hook
-            (lambda ()
-              (local-set-key (kbd "C-x <C-prior>") #'multi-vterm-prev)))
+    ;; Toggle to previous terminal instance in vterm-mode
+    (add-hook 'vterm-mode-hook
+              (lambda ()
+                (local-set-key (kbd "C-x <C-prior>")
+                               #'multi-vterm-prev)))
 
-  ;; Toggle to next terminal instance in vterm-mode
-  (add-hook 'vterm-mode-hook
-            (lambda ()
-              (local-set-key (kbd "C-x <C-next>") #'multi-vterm-next)))
+    ;; Toggle to next terminal instance in vterm-mode
+    (add-hook 'vterm-mode-hook
+              (lambda ()
+                (local-set-key (kbd "C-x <C-next>")
+                               #'multi-vterm-next)))
 
-  ;; Switch to first vterm buffer if it exists
-  (defun switch-to-vterm-buffer ()
-    (interactive)
-    (when (get-buffer "*vterminal<1>*")
-      (switch-to-buffer "*vterminal<1>*")))
+    ;; Switch to first vterm buffer if it exists
+    (defun switch-to-vterm-buffer ()
+      (interactive)
+      (when (get-buffer "*vterminal<1>*")
+        (switch-to-buffer "*vterminal<1>*")))
 
-  (global-set-key (kbd "C-c l") #'switch-to-vterm-buffer))
+    (global-set-key (kbd "C-c l") #'switch-to-vterm-buffer)))
 
 ;; -------------------------------------------- tramp
 

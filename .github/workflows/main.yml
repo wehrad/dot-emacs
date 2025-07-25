@@ -15,9 +15,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install vterm system dependencies
-      run: sudo apt-get update && sudo apt-get install -y libvterm-dev
-      
     - name: Prepare Emacs config
       run: |
         mkdir -p ~/.emacs.d
