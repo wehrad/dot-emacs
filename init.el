@@ -548,12 +548,10 @@
 ;; -------------------------------------------- MOOSE
 
 ;; syntax highlighting for MOOSE input and test files
-(message "Before moose-mode")
 (use-package moose-mode
   :straight (:host github :repo "dylanjm/emacs-moose-mode"
 		   :build nil)
   :mode ("\\.i\\'" . moose-mode))
-(message "After moose-mode")
 
 (with-eval-after-load 'moose-mode
   (add-to-list 'auto-mode-alist '("\\.i\\'" . moose-mode)))
