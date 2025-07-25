@@ -15,18 +15,21 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    # Manually clone emacs-moose-mode to a known folder
-    - name: Clone emacs-moose-mode
-      run: git clone https://github.com/dylanjm/emacs-moose-mode.git ~/.emacs.d/lisp/emacs-moose-mode
+    - name: Prepare Emacs config
+      run: |
+        mkdir -p ~/.emacs.d
+        cp ./init.el ~/.emacs.d/init.el
+
+    - name: Clone emacs-moose-mode locally
+      run: |
+        mkdir -p ~/.emacs.d/lisp
+        git clone --depth 1 https://github.com/dylanjm/emacs-moose-mode.git ~/.emacs.d/lisp/emacs-moose-mode
 
     - uses: purcell/setup-emacs@master
       with:
         version: ${{ matrix.emacs_version }}
 
-    - name: Run elisp-check with moose-mode in load-path
-      run: |
-        emacs --batch \
-          -L ~/.emacs.d/lisp/emacs-moose-mode \
-          -l ~/init.el \
-          --eval "(message \"Loaded moose-mode from: %s\" (locate-library \"moose-mode\"))"
-          --eval "(elisp-check-file \"init.el\" :ignore-warnings t)"
+    - uses: leotaku/elisp-check@master
+      with:
+        file: ~/.emacs.d/init.el
+        ignore_warnings: ${{ matrix.ignore_warnings }}
