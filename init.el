@@ -453,6 +453,16 @@
 
 ;; (completion-preview-mode 1)
 
+(global-set-key (kbd "C-x C-d")  'helm-for-files)
+(global-set-key (kbd "C-o")  'helm-occur)
+
+(put 'scroll-left 'disabled nil)
+
+(scroll-bar-mode -1)
+
+(define-key override-global-map (kbd "C-,") #'beginning-of-buffer)
+(define-key override-global-map (kbd "C-.") #'end-of-buffer)
+
 ;; -------------------------------------------- git
 
 (use-package shell
@@ -1049,18 +1059,6 @@
   (if (file-remote-p default-directory)
       (flycheck-mode -1)
     (flycheck-mode t)))
-
-(global-set-key (kbd "C-x C-d")  'helm-for-files)
-(global-set-key (kbd "C-o")  'helm-occur)
-
-(put 'scroll-left 'disabled nil)
-
-(scroll-bar-mode -1)
-
-(define-key override-global-map (kbd "C-,") #'beginning-of-buffer)
-(define-key override-global-map (kbd "C-.") #'end-of-buffer)
-
-(setq elpy-log-level 'debug)
 
 (provide '.emacs)
 
