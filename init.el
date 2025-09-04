@@ -778,22 +778,6 @@
             (local-set-key (kbd "C-d") #'julia-repl-send-line)
             (local-set-key (kbd "C-c C-c") #'julia-repl-send-buffer)))))
 
-;; Eglot for LSP support in Julia
-;; (use-package eglot
-;;   :hook ((julia-mode . eglot-ensure))
-;;   :config
-;;   (setq eglot-extend-to-xref t)
-;;   (add-to-list 'eglot-server-programs
-;;                '(julia-mode . ("julia"
-;;                                "--startup-file=no"
-;;                                "--history-file=no"
-;;                                "-e"
-;;                                "using LanguageServer, SymbolServer; runserver()"))))
-
-;; (add-hook 'julia-mode-hook
-;;           (lambda ()
-;;             (add-hook 'before-save-hook #'eglot-format-buffer -10 t)))
-
 ;; -------------------------------------------- matlab/octave
 
 ;; octave mode on matlab files
