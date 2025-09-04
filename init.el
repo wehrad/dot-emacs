@@ -1046,7 +1046,7 @@
  'guix-system
  '((tramp-remote-path . (tramp-own-remote-path))))
 (connection-local-set-profiles
- `(:application tramp :ssh "sudo" :tux2 ,(system-name))
+ `(:application tramp :ssh "sudo" :mymachine ,(system-name))
  'guix-system)
 
 ;; Disable flycheck on tramp python buffers
