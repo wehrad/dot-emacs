@@ -5,22 +5,6 @@
              t)
 (package-initialize)
 
-;; Bootstrap straight.el (used for git cloning only)
-(defvar bootstrap-version)
-(let ((bootstrap-file
-       (expand-file-name
-        "straight/repos/straight.el/bootstrap.el"
-        user-emacs-directory))
-      (bootstrap-version 6))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
-
 ;; Install use-package via package.el if missing
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
@@ -157,14 +141,15 @@
 
 ;; -------------------------------------------- yaml
 
-(require 'yaml-mode) 
-(add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode))
+(use-package yaml-mode
+  :ensure t
+  :mode ("\\.yml\\'" . yaml-mode))
 
 ;; -------------------------------------------- json
 
-(require 'json-mode)
-(add-to-list 'auto-mode-alist '("\\.json\\'" . json-mode))
-;; (add-hook 'json-mode-hook 'json-mode-beautify)
+(use-package json-mode
+  :ensure t
+  :mode ("\\.json\\'" . json-mode))
 
 ;; -------------------------------------------- tex
 
@@ -178,7 +163,6 @@
   (LaTeX-mode . auto-fill-mode)
   (flyspell-mode . flyspell-buffer)
   :config
-  
   ;; set font size for the different section titles
   (with-eval-after-load 'font-latex
   (dolist (face '(font-latex-sectioning-0-face  ; \part
@@ -225,6 +209,11 @@
   (citar-bibliography '("~/bib/references.bib"))
   :hook ((LaTeX-mode . citar-capf-setup)
          (org-mode . citar-capf-setup)))
+
+;; prevent cdlatex from inserting sub/superscripts
+(with-eval-after-load 'cdlatex
+  (define-key cdlatex-mode-map "_" nil)
+  (define-key cdlatex-mode-map "^" nil))
 
 ;; -------------------------------------------- useful global settings
 
@@ -464,6 +453,16 @@
 
 ;; (completion-preview-mode 1)
 
+(global-set-key (kbd "C-x C-d")  'helm-for-files)
+(global-set-key (kbd "C-o")  'helm-occur)
+
+(put 'scroll-left 'disabled nil)
+
+(scroll-bar-mode -1)
+
+(define-key override-global-map (kbd "C-,") #'beginning-of-buffer)
+(define-key override-global-map (kbd "C-.") #'end-of-buffer)
+
 ;; -------------------------------------------- git
 
 (use-package shell
@@ -496,7 +495,7 @@
   :ensure t
   :after consult
   :config
-  ;; Add main GitHub account (replace "wehrad" accordingly)
+  ;; Add main GitHub account
   (unless (boundp 'consult-gh-default-orgs-list)
     (defvar consult-gh-default-orgs-list nil))
   (unless (member "wehrad" consult-gh-default-orgs-list)
@@ -540,7 +539,7 @@
 
 ;; syntax highlighting for MOOSE input and test files
 (use-package moose-mode
-  :straight (:host github :repo "dylanjm/emacs-moose-mode")
+  :load-path "~/.emacs.d/lisp/emacs-moose-mode"
   :mode ("\\.i\\'" . moose-mode))
 
 (with-eval-after-load 'moose-mode
@@ -557,47 +556,55 @@
 ;; -------------------------------------------- modify buffers
 
 ;; Originally from stevey, adapted to support moving to a new directory.
-(defun rename-file-and-buffer (new-name) 
-  "Renames both current buffer and file it's visiting to NEW-NAME." 
-  (interactive (progn (if (not (buffer-file-name)) 
-			  (error 
-			   "Buffer '%s' is not visiting a file!"
-			   (buffer-name)))
-		      ;; Disable ido auto merge since it too frequently jumps back to the original
-		      ;; file name if you pause while typing. Reenable with C-z C-z in the prompt.
-		      (let ((ido-auto-merge-work-directories-length -1)) 
-			(list (read-file-name (format "Rename %s to: " (file-name-nondirectory
-									(buffer-file-name)))))))) 
-  (if (equal new-name "") 
-      (error 
-       "Aborted rename")) 
-  (setq new-name (if (file-directory-p new-name) 
-		     (expand-file-name (file-name-nondirectory (buffer-file-name)) new-name) 
-		   (expand-file-name new-name)))
+(defun rename-file-and-buffer (new-name)
+  "Renames both current buffer and file it's visiting to NEW-NAME."
+  (interactive
+   (progn
+     (if (not (buffer-file-name))
+         (error "Buffer '%s' is not visiting a file!" (buffer-name)))
+     ;; Disable ido auto merge since it too frequently jumps back to
+     ;; the original file name if you pause while typing.
+     ;; Reenable with C-z C-z in the prompt.
+     (let ((ido-auto-merge-work-directories-length -1))
+       (list (read-file-name
+              (format "Rename %s to: "
+                      (file-name-nondirectory (buffer-file-name))))))))
+  (if (equal new-name "")
+      (error "Aborted rename"))
+  (setq new-name
+        (if (file-directory-p new-name)
+            (expand-file-name
+             (file-name-nondirectory (buffer-file-name)) new-name)
+          (expand-file-name new-name)))
   ;; Only rename if the file was saved before. Update the
   ;; buffer name and visited file in all cases.
-  (if (file-exists-p (buffer-file-name)) 
-      (rename-file (buffer-file-name) new-name 1)) 
+  (if (file-exists-p (buffer-file-name))
+      (rename-file (buffer-file-name) new-name 1))
   (let ((was-modified (buffer-modified-p)))
     ;; This also renames the buffer, and works with uniquify
-    (set-visited-file-name new-name) 
-    (if was-modified (save-buffer)
+    (set-visited-file-name new-name)
+    (if was-modified
+        (save-buffer)
       ;; Clear buffer-modified flag caused by set-visited-file-name
-      (set-buffer-modified-p nil))) 
-  (setq default-directory (file-name-directory new-name)) 
+      (set-buffer-modified-p nil)))
+  (setq default-directory (file-name-directory new-name))
   (message "Renamed to %s." new-name))
-(global-set-key (kbd "C-c r")  #'rename-file-and-buffer)
 
-(defun delete-file-and-buffer () 
-  "Kill the current buffer and deletes the file it is visiting." 
-  (interactive) 
-  (let ((filename (buffer-file-name))) 
-    (when filename (if (vc-backend filename) 
-		       (vc-delete-file filename) 
-		     (progn (delete-file filename) 
-			    (message "Deleted file %s" filename) 
-			    (kill-buffer))))))
-(global-set-key (kbd "C-c d")  #'delete-file-and-buffer)
+(global-set-key (kbd "C-c r") #'rename-file-and-buffer)
+
+(defun delete-file-and-buffer ()
+  "Kill the current buffer and deletes the file it is visiting."
+  (interactive)
+  (let ((filename (buffer-file-name)))
+    (when filename
+      (if (vc-backend filename)
+          (vc-delete-file filename)
+        (progn
+          (delete-file filename)
+          (message "Deleted file %s" filename)
+          (kill-buffer))))))
+
+(global-set-key (kbd "C-c d") #'delete-file-and-buffer)
 
 ;; -------------------------------------------- ibuffer
 
@@ -612,12 +619,13 @@
          ("python" (or (mode . python-mode)))
          ("C++" (or (mode . c-mode) (mode . c++-mode)))
          ("folders" (mode . dired-mode))
-	 ("tex" (or (mode . latex-mode)
-		    (mode . LaTeX-mode)))
+         ("tex" (or (mode . latex-mode)
+                    (mode . LaTeX-mode)))
          ("csv" (mode . csv-mode))
          ("txt" (mode . text-mode))
          ("bash" (mode . sh-mode))
          ("yml" (mode . yaml-mode))
+         ("julia" (mode . julia-mode))
          ("vterminals" (mode . vterm-mode))
          ("magit" (or (mode . magit-status-mode)
                       (mode . magit-diff-mode)
@@ -752,32 +760,33 @@
   "Non-nil if VC grouping is active in ibuffer.")
 
 (defun my/ibuffer-toggle-vc-groups ()
-  "Toggle VC root grouping in ibuffer."
-  (interactive)
-  (if my/ibuffer-vc-groups-active
-      (progn
-        (ibuffer-switch-to-saved-filter-groups "default")
-        (setq my/ibuffer-vc-groups-active nil)
-        (message "ibuffer: default filter groups"))
-    (ibuffer-vc-set-filter-groups-by-vc-root)
-    (setq my/ibuffer-vc-groups-active t)
-    (message "ibuffer: VC root filter groups"))
-  (ibuffer-update nil t))
+    "Toggle VC root grouping in ibuffer."
+    (interactive)
+    (if my/ibuffer-vc-groups-active
+        (progn
+          (ibuffer-switch-to-saved-filter-groups "default")
+          (setq my/ibuffer-vc-groups-active nil)
+          (message "ibuffer: default filter groups"))
+      (ibuffer-vc-set-filter-groups-by-vc-root)
+      (setq my/ibuffer-vc-groups-active t)
+      (message "ibuffer: VC root filter groups"))
+    (ibuffer-update nil t))
 
 (with-eval-after-load 'ibuffer
   (define-key ibuffer-mode-map (kbd "v") 'my/ibuffer-toggle-vc-groups))
 
 ;; -------------------------------------------- julia
 
-(require 'julia-mode)
-(require 'julia-repl)
-(add-hook 'julia-mode-hook 'julia-repl-mode)
-(add-hook 'julia-mode-hook 'eglot-jl-init)
-(add-hook 'julia-mode-hook 'eglot-ensure)
-
-(add-hook 'julia-mode-hook '(lambda () 
-			      (local-set-key (kbd "C-d") 'julia-repl-send-line) 
-			      (local-set-key (kbd "C-c C-c") 'julia-repl-send-buffer)))
+(use-package julia-mode
+  :ensure t
+  :mode "\\.jl\\'"
+  :hook ((julia-mode . julia-repl-mode)
+         (julia-mode . eglot-jl-init)
+         (julia-mode . eglot-ensure)
+         (julia-mode .
+          (lambda ()
+            (local-set-key (kbd "C-d") #'julia-repl-send-line)
+            (local-set-key (kbd "C-c C-c") #'julia-repl-send-buffer)))))
 
 ;; -------------------------------------------- matlab/octave
 
@@ -821,7 +830,7 @@
     (add-hook 'elpy-mode-hook 'flycheck-mode))
   ;; Use ipython for run-python
   (setq python-shell-interpreter "ipython"
-        python-shell-interpreter-args "-i --simple-prompt"))
+	python-shell-interpreter-args "--simple-prompt -i"))
 
 ;; Blacken package for auto-formatting Python code
 (use-package blacken
@@ -868,7 +877,7 @@
 
 ;; code-cells package for jupyter notebook cell detection and running
 (use-package code-cells
-  :load-path "~/.emacs.d/code-cells.el"
+  :ensure t
   :commands (code-cells-mark-cell code-cells-forward-cell))
 
 ;; Define your custom function to run a python cell
@@ -898,11 +907,11 @@
 (eval-after-load 'autoinsert
   '(progn
      (define-auto-insert
-       '("\\.py\\'" . "python-UZH-header")
+       '("\\.py\\'" . "python-header")
        '("" "#!/usr/bin/env python3\n"
           "# -*- coding: utf-8 -*-\n"
           "\"\"\"\n\n"
-          "@author: Adrien Wehrlé, University of Zurich, Switzerland\n\n"
+          "@author: wehrad\n\n"
           "\"\"\"\n\n"))
      (define-auto-insert
        '("\\.tex\\'" . "latex-header")
@@ -959,6 +968,7 @@
     (python-shell-send-string
      "import matplotlib.pyplot as plt; plt.close('all')")))
 
+;; Bind to C-c f in both editing and REPL modes
 (with-eval-after-load 'python
   (define-key python-mode-map (kbd "C-c f")
     #'my/python-close-all-figures)
@@ -984,71 +994,71 @@
             (local-set-key (kbd "M-<up>") #'comint-previous-prompt)
             (local-set-key (kbd "M-<down>") #'comint-next-prompt)))
 
-;; list variables in current python console
-(defun my/python-show-user-vars ()
-  "Show user-defined Python variables with type and shape/len."
-  (interactive)
-  (let ((python-code
-         "import sys
-import types
-import numpy as np
+;; Enable company-mode in the Python REPL for variable completion
+(add-hook 'inferior-python-mode-hook #'company-mode)
+(add-hook 'inferior-python-mode-hook
+          (lambda ()
+            (local-set-key (kbd "TAB") #'company-complete)))
 
-def user_vars():
-    for name, val in globals().items():
-        if name.startswith('_'):
-            continue
-        if isinstance(val, types.ModuleType):
-            continue
-        if name in [\"In\", \"Out\", \"get_ipython\",
-                    \"exit\", \"quit\", \"open\", \"user_vars\"]:
-            continue
-
-        t = type(val).__name__
-        shape = ''
-        if hasattr(val, 'shape'):
-            shape = f', shape={val.shape}'
-        elif hasattr(val, '__len__'):
-            shape = f', len={len(val)}'
-        print(f'{name}: {t}{shape}')
-
-user_vars()
-"))
-    (python-shell-send-string python-code)))
-
-(with-eval-after-load 'python
-  (define-key inferior-python-mode-map (kbd "C-c l")
-	      #'my/python-show-user-vars))
+;; ;; Install and configure Jedi with company completion
+(use-package jedi
+  :ensure t
+  :config
+  (add-hook 'python-mode-hook 'jedi:setup)
+  (add-hook 'inferior-python-mode-hook 'jedi:setup)
+  (add-hook 'inferior-python-mode-hook 'company-mode))
 
 ;; -------------------------------------------- terminal emulator
 
 (use-package multi-vterm
-  :ensure t
-  :config
-  ;; Start terminal
-  (global-set-key (kbd "C-c v") #'multi-vterm)
+    :ensure t
+    :config
+    ;; Start terminal
+    (global-set-key (kbd "C-c v") #'multi-vterm)
 
-  ;; Toggle to previous terminal instance in vterm-mode
-  (add-hook 'vterm-mode-hook
-            (lambda ()
-              (local-set-key (kbd "C-x <C-prior>") #'multi-vterm-prev)))
+    ;; Toggle to previous terminal instance in vterm-mode
+    (add-hook 'vterm-mode-hook
+              (lambda ()
+                (local-set-key (kbd "C-x <C-prior>")
+                               #'multi-vterm-prev)))
 
-  ;; Toggle to next terminal instance in vterm-mode
-  (add-hook 'vterm-mode-hook
-            (lambda ()
-              (local-set-key (kbd "C-x <C-next>") #'multi-vterm-next)))
+    ;; Toggle to next terminal instance in vterm-mode
+    (add-hook 'vterm-mode-hook
+              (lambda ()
+                (local-set-key (kbd "C-x <C-next>")
+                               #'multi-vterm-next)))
 
-  ;; Switch to first vterm buffer if it exists
-  (defun switch-to-vterm-buffer ()
-    (interactive)
-    (when (get-buffer "*vterminal<1>*")
-      (switch-to-buffer "*vterminal<1>*")))
+    ;; Switch to first vterm buffer if it exists
+    (defun switch-to-vterm-buffer ()
+      (interactive)
+      (when (get-buffer "*vterminal<1>*")
+        (switch-to-buffer "*vterminal<1>*")))
 
-  (global-set-key (kbd "C-c l") #'switch-to-vterm-buffer))
+    (global-set-key (kbd "C-c l") #'switch-to-vterm-buffer))
 
 ;; -------------------------------------------- tramp
 
 ;; Faster than the default scp (for small files)
 (setq tramp-default-method "ssh")
+
+;; fix tramp on guix
+(connection-local-set-profile-variables
+ 'guix-system
+ '((tramp-remote-path . (tramp-own-remote-path))))
+(connection-local-set-profiles
+ `(:application tramp :ssh "sudo" :mymachine ,(system-name))
+ 'guix-system)
+
+;; Disable flycheck on tramp python buffers
+(when (require 'flycheck -1 t)
+  (setq elpy-modules (delq 'elpy-module-flymake elpy-modules))
+  (add-hook 'elpy-mode-hook 'jj/flycheck-mode))
+(defun jj/flycheck-mode ()
+  "Don't enable flycheck mode for remote buffers."
+  (interactive)
+  (if (file-remote-p default-directory)
+      (flycheck-mode -1)
+    (flycheck-mode t)))
 
 (provide '.emacs)
 
