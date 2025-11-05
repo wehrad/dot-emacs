@@ -1008,6 +1008,26 @@
   (add-hook 'inferior-python-mode-hook 'jedi:setup)
   (add-hook 'inferior-python-mode-hook 'company-mode))
 
+;; Use pyvenv-activate interactively instead of using full paths
+(defun my/pyvenv-activate-conda-env ()
+  "Interactively activate a Conda environment using `pyvenv-activate'.
+Lists available Conda envs and lets you choose one by name."
+  (interactive)
+  (let* ((conda-envs-path
+          (or (getenv "CONDA_ENVS_PATH")
+              (expand-file-name "~/miniconda3/envs")))
+         ;; Gather subdirectories that look like environment folders
+         (envs (when (file-directory-p conda-envs-path)
+                 (seq-filter
+                  (lambda (f) (file-directory-p (expand-file-name f conda-envs-path)))
+                  (directory-files conda-envs-path nil "^[^.]")))))
+    (unless envs
+      (user-error "No conda environments found in %s" conda-envs-path))
+    (let* ((choice (completing-read "Conda env: " envs nil t))
+           (path   (expand-file-name choice conda-envs-path)))
+      (pyvenv-activate path)
+      (message "Activated conda env: %s" choice))))
+
 ;; -------------------------------------------- terminal emulator
 
 (use-package multi-vterm
