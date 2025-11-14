@@ -417,7 +417,7 @@
       (kill-new fname)
       (message "Copied: %s" fname)))
 
-  ;; Bind the key helm-files.el loads
+  ;; Bind the key after load
   (with-eval-after-load 'helm-files
     (define-key helm-find-files-map (kbd "C-c C-k")
       #'helm-find-files-copy-filename))
