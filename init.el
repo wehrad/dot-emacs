@@ -409,18 +409,31 @@
   (setq helm-completion-in-region-fuzzy-match t)
   (global-set-key (kbd "M-X") 'helm-M-x)
 
+  ;; Function: copy full path from helm-find-files
+  (defun helm-find-files-copy-filename ()
+    "Copy the full path of the selected candidate in `helm-find-files`."
+    (interactive)
+    (let ((fname (helm-get-selection)))
+      (kill-new fname)
+      (message "Copied: %s" fname)))
+
+  ;; Bind the key after load
+  (with-eval-after-load 'helm-files
+    (define-key helm-find-files-map (kbd "C-c C-k")
+      #'helm-find-files-copy-filename))
+
   (defun my/right-window ()
     "Return the rightmost window in the current frame."
     (car (last (window-list))))
 
   ;; run helm-for-files in right window instead of minibuffer
   (setq helm-display-function
-	(lambda (buf _)
+        (lambda (buf _)
           (let ((win (my/right-window)))
             (if (window-live-p win)
-		(set-window-buffer win buf)
+                (set-window-buffer win buf)
               (display-buffer-pop-up-window buf)))))
-  
+
   (global-set-key (kbd "C-x C-d") 'helm-for-files)
   (global-set-key (kbd "M-y") 'helm-show-kill-ring))
 
