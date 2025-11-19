@@ -866,7 +866,20 @@
 
 ;; Magit for Git integration
 (use-package magit
-  :ensure t)
+  :ensure t
+  :config
+  ;; Force magit-status to prompt for a directory when called
+  ;; interactively.
+  (advice-add 'magit-status :around
+              (lambda (orig-fun &rest args)
+                "If called interactively, simulate `C-u` so
+`magit-status` prompts for a directory. If called
+non-interactively, behave normally."
+                (if (called-interactively-p 'interactive)
+                    (let ((current-prefix-arg '(4)))  ; simulate C-u
+                      (call-interactively orig-fun))
+                  (apply orig-fun args)))))
+
 
 ;; sphinx-doc for docstring skeletons in python
 (use-package sphinx-doc
