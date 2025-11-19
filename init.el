@@ -142,6 +142,35 @@
 (add-hook 'org-mode-hook #'auto-fill-mode)
 (setq-default fill-column 70)
 
+;; -------------------------------------------- rg
+
+(use-package rg
+  :ensure t
+  :commands (rg rg-project rg-dwim)
+  :bind (("C-c s" . rg-menu)
+         :map rg-mode-map
+         ("e" . wgrep-change-to-wgrep-mode)
+         ("C-c C-c" . wgrep-finish-edit))
+  :init
+  (setq rg-group-result t
+        rg-ignore-case 'smart
+        rg-custom-type-aliases
+        '(("elisp" . "*.el")
+          ("conf" . "*.conf *.cfg")))
+  :config
+  ;; wgrep integration
+  (with-eval-after-load 'wgrep
+    (autoload 'wgrep-rg-setup "wgrep-rg")
+    (add-hook 'rg-mode-hook #'wgrep-rg-setup))
+
+  ;; optional toggles
+  (rg-define-toggle "--multiline --multiline-dotall" "m")
+  (rg-define-toggle "--word-regexp" "w")
+  (rg-define-toggle "--files-with-matches" "L"))
+
+;; override C-x f globally to run rg
+(global-set-key (kbd "C-x f") #'rg)
+
 ;; -------------------------------------------- yaml
 
 (use-package yaml-mode
