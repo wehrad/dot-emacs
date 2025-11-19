@@ -41,6 +41,9 @@
   :ensure t
   :hook (org-mode . org-bullets-mode))
 
+;; Tell org-agenda which file to use
+(setq org-agenda-files '("~/org/agenda.org"))
+
 ;; Custom faces for org-level fontsizes (keep as-is)
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
