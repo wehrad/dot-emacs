@@ -494,6 +494,26 @@
 
   (global-set-key (kbd "C-c g") #'push-all)
 
+    ;; Pull in vterm from current project/repo root, default to merge
+  (defun git-pull-vterm ()
+    "Open a vterm in the root of the current Git repository and
+     run `git pull --no-rebase`."
+    (interactive)
+    (let* ((default-directory
+            ;; Find the Git root of the current directory
+            (or (locate-dominating-file default-directory ".git")
+		default-directory))
+           (buffer-name "*git-pull*"))
+      ;; Open or switch to vterm buffer
+      (if (get-buffer buffer-name)
+          (switch-to-buffer buffer-name)
+	(vterm buffer-name))
+      ;; Ensure we're in the repo root
+      (cd default-directory)
+      ;; Run git pull with --no-rebase
+      (vterm-send-string "git pull --no-rebase")
+      (vterm-send-return)))
+
   ;; Easy git add, commit, push after updating .gitignore cache
   (defun update-gitignore (comment)
     (interactive "Mcomment:")
