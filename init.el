@@ -600,6 +600,66 @@
 
   (global-set-key (kbd "C-c f") #'consult-gh-search-my-code))
 
+(defun my/git-clean-large-files (repo-path pattern)
+  "Rewrite Git history in REPO-PATH, removing files matching PATTERN.
+Automatically commits and pushes current changes first, then removes
+large files, cleans up, restores 'origin', and force-pushes rewritten
+history."
+  (interactive
+   (list
+    (read-directory-name "Repository path: ")
+    (read-string "File glob pattern to remove: ")))
+  
+  ;; Normalize repo path
+  (setq repo-path (directory-file-name repo-path))
+
+  ;; Ensure it is a git repo
+  (unless (file-directory-p (concat repo-path "/.git"))
+    (error "%s is not a Git repository" repo-path))
+
+  ;; Read origin URL *before* filter-repo removes it
+  (let* ((config-file (concat repo-path "/.git/config"))
+         (origin-url nil))
+    (with-temp-buffer
+      (insert-file-contents config-file)
+      (goto-char (point-min))
+      (when (re-search-forward
+             "\\[remote \"origin\"\\][^[]*url = \\(.*?\\)$" nil t)
+        (setq origin-url (string-trim (match-string 1)))))
+    (unless origin-url
+      (error "Could not find origin URL in %s/.git/config" repo-path))
+
+    (let ((default-directory repo-path))
+      
+      ;; Commit all local changes first
+      (shell-command "git add -A")
+      (shell-command "git commit -m \"Backup before cleaning large files\" 2>/dev/null") ; ignore if no changes
+      
+      ;; Push current state to origin
+      (message "Pushing current state to origin as backup...")
+      (shell-command "git push origin main")
+
+      ;; Run filter-repo
+      (message "Removing large files from history...")
+      (shell-command
+       (format "git filter-repo --force --path-glob '%s' --invert-paths" pattern))
+
+      ;; Cleanup
+      (shell-command "git reflog expire --expire=now --all")
+      (shell-command "git gc --prune=now --aggressive")
+
+      ;; Restore origin
+      (shell-command "git remote remove origin 2>/dev/null")
+      (shell-command (format "git remote add origin \"%s\"" origin-url))
+
+      ;; Force-push rewritten history
+      (message "Force-pushing rewritten history to origin...")
+      (shell-command "git push origin --force --all")
+      (shell-command "git push origin --force --tags")
+
+      (message "Done cleaning Git history in %s (origin restored: %s)"
+               repo-path origin-url))))
+
 ;; -------------------------------------------- MOOSE
 
 ;; syntax highlighting for MOOSE input and test files
