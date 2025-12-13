@@ -1188,9 +1188,17 @@ Lists available Conda envs and lets you choose one by name."
 
     ;; Switch to first vterm buffer if it exists
     (defun switch-to-vterm-buffer ()
+      "Switch to the first existing multi-vterm buffer."
       (interactive)
-      (when (get-buffer "*vterminal<1>*")
-        (switch-to-buffer "*vterminal<1>*")))
+      (let ((vterm-buffers
+             (seq-filter
+              (lambda (b)
+		(string-match-p
+		 "^\\*vterminal<\\([0-9]+\\)>\\*$" b))
+              (mapcar #'buffer-name (buffer-list)))))
+	(if vterm-buffers
+            (switch-to-buffer (car vterm-buffers))
+	  (message "No vterm buffer exists"))))
 
     (global-set-key (kbd "C-c l") #'switch-to-vterm-buffer))
 
