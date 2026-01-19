@@ -86,7 +86,31 @@
      (define-key org-mode-map (kbd "C-c C-i") 'org-cliplink)
 
      ;; Jump to org header (imenu)
-     (define-key org-mode-map (kbd "C-c i") 'imenu)))
+     (define-key org-mode-map (kbd "C-c i") 'imenu)
+
+     ;; Ctrl-Up/Down changes priority if on a priority cookie
+     (define-key org-mode-map (kbd "C-<up>")
+       (lambda ()
+         (interactive)
+         (if (save-excursion
+               (beginning-of-line)
+               (re-search-forward org-priority-regexp (line-end-position) t)
+               (<= (match-beginning 0) (point))
+               (<= (point) (match-end 0)))
+             (org-priority-up)
+           (call-interactively 'org-metaup))))
+
+     (define-key org-mode-map (kbd "C-<down>")
+       (lambda ()
+         (interactive)
+         (if (save-excursion
+               (beginning-of-line)
+               (re-search-forward org-priority-regexp (line-end-position) t)
+               (<= (match-beginning 0) (point))
+               (<= (point) (match-end 0)))
+             (org-priority-down)
+           (call-interactively 'org-metadown))))
+     ))
 
 ;; Org agenda settings
 (setq org-agenda-inhibit-startup t)
