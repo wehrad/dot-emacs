@@ -110,6 +110,10 @@
                (<= (point) (match-end 0)))
              (org-priority-down)
            (call-interactively 'org-metadown))))
+
+     ;; Archive subtree
+     (define-key org-mode-map (kbd "C-x a") #'org-archive-subtree)
+
      ))
 
 ;; Org agenda settings
