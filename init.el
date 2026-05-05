@@ -156,6 +156,30 @@
   (let ((daily-name (format-time-string "%y%m%d_%H%M%S")))
     (find-file (format "~/notes/notes_%s.org" daily-name))))
 
+;; Move the current notes (usually opened with open-notes) to the
+;; archived notes folder (a given note ends up either deleted or
+;; archived)
+(defun send-notes ()  
+  (interactive)
+  (if (not (buffer-file-name))
+      (user-error "Buffer is not visiting a file")
+    (let* ((source-file (buffer-file-name))
+           (filename (file-name-nondirectory source-file))
+           (target-dir "~/archived_notes")
+           (target-file (concat target-dir filename)))
+      ;; Ensure target directory exists
+      (unless (file-directory-p target-dir)
+        (make-directory target-dir t))
+      ;; Check for conflicts to prevent data loss
+      (if (file-exists-p target-file)
+          (user-error "File %s already exists in target directory" filename)
+        (progn
+          ;; 'rename-file' moves the file physically (delete from source)
+          (rename-file source-file target-file)
+          ;; Update the buffer to point to the new location
+          (set-visited-file-name target-file)
+          (message "Note moved to %s" target-file))))))
+
 ;; org-alert setup
 (use-package org-alert
   :ensure t
