@@ -63,6 +63,9 @@
         ("WAITING" . "orange") 
         ("CANCELED" . "yellow")))
 
+;; Keep logbook entries (C-c C-z) hidden in a logbook drawer
+(setq org-log-into-drawer t)
+
 (setq inhibit-startup-screen t)
 
 ;; Enable org-indent-mode in org buffers
