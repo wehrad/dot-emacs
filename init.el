@@ -1257,6 +1257,23 @@ Lists available Conda envs and lets you choose one by name."
 
     (global-set-key (kbd "C-c l") #'switch-to-vterm-buffer))
 
+;; -------------------------------------------- plantuml
+
+;; M-x plantuml-download-jar<RET> to get plantuml.jar
+(use-package plantuml-mode
+  :ensure t
+  :mode ("\\.puml\\'" "\\.plantuml\\'")
+  :config
+  ;; Sample jar configuration
+  (setq plantuml-jar-path "~/plantuml.jar")
+  (setq plantuml-default-exec-mode 'jar)
+  
+  (setq plantuml-output-type "png")
+
+  :hook (plantuml-mode . (lambda ()
+                           (local-set-key (kbd "C-c C-c")
+					  #'plantuml-preview))))
+
 ;; -------------------------------------------- tramp
 
 ;; Faster than the default scp (for small files)
